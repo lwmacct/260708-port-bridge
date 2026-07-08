@@ -1,9 +1,0 @@
-node_modules/
-src/
-.gitignore
-Taskfile.yml
-tsconfig.json
-pnpm-lock.yaml
-pnpm-workspace.yaml
-*.vsix
-*.log

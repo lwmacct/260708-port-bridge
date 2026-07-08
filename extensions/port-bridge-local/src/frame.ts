@@ -13,13 +13,13 @@ export interface Frame {
   readonly payload: Buffer;
 }
 
-export function encodeFrame(type: FrameType, sessionId: number, payload?: Uint8Array): Buffer {
-  const _payload = payload ? Buffer.from(payload) : Buffer.alloc(0);
-  const _frame = Buffer.allocUnsafe(HEADER_LENGTH + _payload.length);
-  _frame.writeUInt8(type, 0);
-  _frame.writeUInt32BE(sessionId, 1);
-  _frame.writeUInt32BE(_payload.length, 5);
-  _payload.copy(_frame, HEADER_LENGTH);
+export function encodeFrame(_type: FrameType, _sessionId: number, _payload?: Uint8Array): Buffer {
+  const _body = _payload ? Buffer.from(_payload) : Buffer.alloc(0);
+  const _frame = Buffer.allocUnsafe(HEADER_LENGTH + _body.length);
+  _frame.writeUInt8(_type, 0);
+  _frame.writeUInt32BE(_sessionId, 1);
+  _frame.writeUInt32BE(_body.length, 5);
+  _body.copy(_frame, HEADER_LENGTH);
   return _frame;
 }
 
@@ -41,12 +41,7 @@ export class FrameReader {
 
       const _payload = this._buffer.subarray(HEADER_LENGTH, _frameLength);
       this._buffer = this._buffer.subarray(_frameLength);
-
-      _onFrame({
-        type: _type as FrameType,
-        sessionId: _sessionId,
-        payload: _payload
-      });
+      _onFrame({ type: _type as FrameType, sessionId: _sessionId, payload: _payload });
     }
   }
 }

@@ -1,107 +1,17 @@
 {
-  "name": "local-port-bridge",
-  "displayName": "Local Port Bridge",
-  "description": "Expose local machine ports to VS Code remote workspaces through Unix sockets or remote loopback ports.",
-  "version": "0.3.260708",
-  "publisher": "lwmacct",
+  "name": "local-port-bridge-workspace",
+  "private": true,
+  "version": "0.4.260709",
   "license": "MIT",
   "packageManager": "pnpm@11.10.0",
   "engines": {
-    "vscode": "^1.128.0",
     "npm": "please-use-pnpm"
   },
-  "categories": [
-    "Other"
-  ],
-  "main": "./dist/extension.js",
-  "activationEvents": [
-    "onStartupFinished"
-  ],
-  "extensionKind": [
-    "ui"
-  ],
-  "enabledApiProposals": [
-    "resolvers"
-  ],
-  "contributes": {
-    "commands": [
-      {
-        "command": "localPortBridge.start",
-        "title": "Local Port Bridge: Start"
-      },
-      {
-        "command": "localPortBridge.stop",
-        "title": "Local Port Bridge: Stop"
-      },
-      {
-        "command": "localPortBridge.restart",
-        "title": "Local Port Bridge: Restart"
-      },
-      {
-        "command": "localPortBridge.showStatus",
-        "title": "Local Port Bridge: Show Status"
-      }
-    ],
-    "configuration": {
-      "title": "Local Port Bridge",
-      "properties": {
-        "localPortBridge.autoStart": {
-          "type": "boolean",
-          "default": true,
-          "description": "Start configured local port bridges automatically in remote windows."
-        },
-        "localPortBridge.mappings": {
-          "type": "array",
-          "default": [],
-          "description": "Local-to-remote port mappings.",
-          "items": {
-            "type": "object",
-            "required": [
-              "name",
-              "localPort"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "Stable mapping name."
-              },
-              "localHost": {
-                "type": "string",
-                "default": "127.0.0.1",
-                "description": "Host on the local machine to connect to."
-              },
-              "localPort": {
-                "type": "number",
-                "minimum": 1,
-                "maximum": 65535,
-                "description": "Port on the local machine to connect to."
-              },
-              "remoteSocket": {
-                "type": "string",
-                "description": "Unix socket path to create in the remote workspace."
-              },
-              "remoteHost": {
-                "type": "string",
-                "default": "127.0.0.1",
-                "description": "Remote host/interface for the optional TCP listener."
-              },
-              "remotePort": {
-                "type": "number",
-                "minimum": 1,
-                "maximum": 65535,
-                "description": "Optional TCP port to listen on in the remote workspace."
-              }
-            }
-          }
-        }
-      }
-    }
-  },
   "scripts": {
-    "compile": "tsc -p .",
-    "watch": "tsc -watch -p .",
-    "typecheck": "tsc -p . --noEmit",
-    "package": "vsce package --allow-missing-repository"
+    "compile": "pnpm -r --filter './extensions/*' run compile",
+    "watch": "pnpm -r --parallel --filter './extensions/*' run watch",
+    "typecheck": "pnpm -r --filter './extensions/*' run typecheck",
+    "package": "pnpm -r --filter './extensions/*' run package"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
