@@ -96,7 +96,7 @@ function __handleConnection(_mapping: Mapping, _socket: net.Socket): void {
   );
 
   _socket.on('data', (_chunk) => {
-    __sendFrame(FrameType.Data, _sessionId, _chunk);
+    __sendFrame(FrameType.Data, _sessionId, typeof _chunk === 'string' ? Buffer.from(_chunk) : _chunk);
   });
 
   _socket.on('error', (_error) => {

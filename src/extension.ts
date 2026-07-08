@@ -207,7 +207,11 @@ class BridgeController {
     });
 
     _socket.on('data', (_chunk) => {
-      _process.stdin.write(encodeFrame(FrameType.Data, _frame.sessionId, _chunk));
+      _process.stdin.write(encodeFrame(
+        FrameType.Data,
+        _frame.sessionId,
+        typeof _chunk === 'string' ? Buffer.from(_chunk) : _chunk
+      ));
     });
 
     _socket.on('error', (_error) => {

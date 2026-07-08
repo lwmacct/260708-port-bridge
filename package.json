@@ -2,7 +2,7 @@
   "name": "local-port-bridge",
   "displayName": "Local Port Bridge",
   "description": "Expose local machine ports to VS Code remote workspaces through Unix sockets or remote loopback ports.",
-  "version": "0.2.260708",
+  "version": "0.3.260708",
   "publisher": "lwmacct",
   "license": "MIT",
   "packageManager": "pnpm@11.10.0",
