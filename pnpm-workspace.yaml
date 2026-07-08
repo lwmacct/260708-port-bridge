@@ -1,0 +1,5 @@
+allowBuilds:
+  "@vscode/vsce-sign": false
+  keytar: false
+minimumReleaseAgeExclude:
+  - "@types/node@26.1.1"
