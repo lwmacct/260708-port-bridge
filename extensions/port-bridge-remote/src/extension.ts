@@ -25,12 +25,17 @@ class RemoteBridge {
   private readonly _servers: net.Server[] = [];
   private _controlServer: net.Server | undefined;
   private _controlSocket: net.Socket | undefined;
+  private _controlPort: number | undefined;
+  private _lastForwardedControlUri: string | undefined;
+  private _reconnectTimer: NodeJS.Timeout | undefined;
+  private _running = false;
   private _nextSessionId = 1;
   private _starting: Promise<void> | undefined;
 
   constructor() {
-    this._status.command = 'localPortBridge.remote.showStatus';
+    this._status.command = 'localPortBridge.remote.reconnectControl';
     this._status.text = '$(plug) Port Bridge Remote: stopped';
+    this._status.tooltip = 'Reconnect Local Port Bridge control channel';
     this._status.show();
   }
 
@@ -54,6 +59,9 @@ class RemoteBridge {
   }
 
   async stop(): Promise<void> {
+    this._running = false;
+    this.__clearReconnectTimer();
+
     for (const _session of this._sessions.values()) {
       _session.socket.destroy();
     }
@@ -70,6 +78,8 @@ class RemoteBridge {
       this._controlServer.close();
       this._controlServer = undefined;
     }
+    this._controlPort = undefined;
+    this._lastForwardedControlUri = undefined;
 
     this.__setStatus('stopped');
   }
@@ -83,17 +93,32 @@ class RemoteBridge {
     const _state = this._controlServer ? 'running' : 'stopped';
     const _control = this._controlSocket && !this._controlSocket.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `Local Port Bridge Remote is ${_state}. control=${_control}, sessions=${this._sessions.size}`
+      `Local Port Bridge Remote is ${_state}. control=${_control}, ` +
+      `controlPort=${this._controlPort ?? 'none'}, forwarded=${this._lastForwardedControlUri ?? 'none'}, ` +
+      `sessions=${this._sessions.size}`
     );
+  }
+
+  async reconnectControl(): Promise<void> {
+    if (!this._controlServer || !this._controlPort) {
+      await this.start();
+      return;
+    }
+
+    this._controlSocket?.destroy();
+    this._controlSocket = undefined;
+    await this.__connectLocalControl();
   }
 
   private async __start(): Promise<void> {
     await this.stop();
+    this._running = true;
 
     const _mappings = this.__readMappings();
     if (_mappings.length === 0) {
       this.__setStatus('no mappings');
       this.__log('No localPortBridge.mappings are configured.');
+      this._running = false;
       return;
     }
 
@@ -130,8 +155,18 @@ class RemoteBridge {
       throw new Error('Failed to resolve remote control server address.');
     }
 
-    const _remoteUri = vscode.Uri.parse(`http://127.0.0.1:${_address.port}`);
+    this._controlPort = _address.port;
+    await this.__connectLocalControl();
+  }
+
+  private async __connectLocalControl(): Promise<void> {
+    if (!this._controlPort) {
+      throw new Error('Remote control server is not listening.');
+    }
+
+    const _remoteUri = vscode.Uri.parse(`http://127.0.0.1:${this._controlPort}`);
     const _localUri = await vscode.env.asExternalUri(_remoteUri);
+    this._lastForwardedControlUri = _localUri.toString();
     this.__log(`Remote control server: ${_remoteUri.toString()}`);
     this.__log(`Forwarded control URI: ${_localUri.toString()}`);
 
@@ -148,7 +183,37 @@ class RemoteBridge {
     }
   }
 
+  private __scheduleControlReconnect(): void {
+    if (!this._running || !this._controlServer || this._reconnectTimer) {
+      return;
+    }
+
+    const _config = vscode.workspace.getConfiguration('localPortBridge');
+    const _delayMs = _config.get<number>('controlReconnectDelayMs', 1000);
+    const _delay = Math.min(Math.max(_delayMs, 100), 30000);
+    this.__setStatus(`reconnecting in ${_delay}ms`);
+    this.__log(`Scheduling control channel reconnect in ${_delay}ms.`);
+
+    this._reconnectTimer = setTimeout(() => {
+      this._reconnectTimer = undefined;
+      void this.__connectLocalControl().catch((_error) => {
+        this.__log(`Control channel reconnect failed: ${_error instanceof Error ? _error.message : String(_error)}`);
+        this.__scheduleControlReconnect();
+      });
+    }, _delay);
+  }
+
+  private __clearReconnectTimer(): void {
+    if (!this._reconnectTimer) {
+      return;
+    }
+
+    clearTimeout(this._reconnectTimer);
+    this._reconnectTimer = undefined;
+  }
+
   private __acceptControl(_socket: net.Socket): void {
+    this.__clearReconnectTimer();
     this._controlSocket?.destroy();
     this._controlSocket = _socket;
     this.__setStatus('control connected');
@@ -177,6 +242,7 @@ class RemoteBridge {
       this._sessions.clear();
       this.__setStatus('waiting for local');
       this.__log('Local control connection closed.');
+      this.__scheduleControlReconnect();
     });
   }
 
@@ -347,6 +413,7 @@ export function activate(_context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('localPortBridge.remote.start', () => _bridge?.start()),
     vscode.commands.registerCommand('localPortBridge.remote.stop', () => _bridge?.stop()),
     vscode.commands.registerCommand('localPortBridge.remote.restart', () => _bridge?.restart()),
+    vscode.commands.registerCommand('localPortBridge.remote.reconnectControl', () => _bridge?.reconnectControl()),
     vscode.commands.registerCommand('localPortBridge.remote.showStatus', () => _bridge?.showStatus())
   );
 

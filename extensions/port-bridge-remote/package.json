@@ -34,6 +34,10 @@
         "title": "Local Port Bridge: Restart Remote"
       },
       {
+        "command": "localPortBridge.remote.reconnectControl",
+        "title": "Local Port Bridge: Reconnect Control Channel"
+      },
+      {
         "command": "localPortBridge.remote.showStatus",
         "title": "Local Port Bridge: Show Remote Status"
       }
@@ -89,6 +93,13 @@
               }
             }
           }
+        },
+        "localPortBridge.controlReconnectDelayMs": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 100,
+          "maximum": 30000,
+          "description": "Delay before recreating the internal control tunnel after it is closed."
         }
       }
     }

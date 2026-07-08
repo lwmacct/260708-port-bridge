@@ -100,6 +100,7 @@ code --enable-proposed-api=...
 - 启动一个远程 control server
 - 通过 `vscode.env.asExternalUri()` 把 control server 转发到本机
 - 通知 local 扩展连接这个 forwarded URI
+- 如果 control tunnel 被用户关闭，自动重新创建并通知 local 扩展重连
 
 `port-bridge-local` 负责：
 
@@ -109,6 +110,39 @@ code --enable-proposed-api=...
 - 双向转发原始 TCP 字节流
 
 HTTP、WebSocket、CDP 都不被解析，只作为 raw TCP bytes 转发。
+
+## 内部 Control Channel
+
+启动后，远程容器里会多出一个随机监听端口，例如：
+
+```text
+127.0.0.1:37469
+```
+
+这是内部 control server，不是业务端口。它用于连接 `port-bridge-remote` 和 `port-bridge-local`：
+
+```text
+port-bridge-remote 127.0.0.1:<random-control-port>
+  -> VS Code forwarded port
+  -> port-bridge-local
+```
+
+这个端口是通过 `vscode.env.asExternalUri()` 创建的 VS Code tunnel，所以会出现在 VS Code Ports/Forwarded Ports 里。VS Code 官方 API 说明这类 tunnel 的生命周期由编辑器管理，用户可以关闭它。
+
+如果你误关了这个随机 control port：
+
+- 已有连接会断开。
+- remote 扩展会在 `localPortBridge.controlReconnectDelayMs` 后自动重新创建 tunnel。
+- 也可以执行 `Local Port Bridge: Reconnect Control Channel` 手动重连。
+- remote 状态栏项点击后也会触发重连。
+
+默认重连延迟：
+
+```json
+{
+  "localPortBridge.controlReconnectDelayMs": 1000
+}
+```
 
 ## 使用配置
 
@@ -209,6 +243,7 @@ Remote 扩展提供：
 Local Port Bridge: Start Remote
 Local Port Bridge: Stop Remote
 Local Port Bridge: Restart Remote
+Local Port Bridge: Reconnect Control Channel
 Local Port Bridge: Show Remote Status
 ```
 
