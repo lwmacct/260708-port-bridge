@@ -2,7 +2,7 @@
   "name": "port-bridge-remote",
   "displayName": "Port Bridge Remote",
   "description": "Remote-side endpoint for Port Bridge.",
-  "version": "0.8.260709",
+  "version": "0.9.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "engines": {
@@ -53,45 +53,69 @@
         "portBridge.mappings": {
           "type": "array",
           "default": [],
-          "description": "Local-to-remote port mappings.",
+          "description": "Local-to-remote port mappings. Use a number for the common case, or an object for advanced overrides.",
           "items": {
-            "type": "object",
-            "required": [
-              "name",
-              "localPort"
-            ],
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "Stable mapping name."
-              },
-              "localHost": {
-                "type": "string",
-                "default": "127.0.0.1",
-                "description": "Host on the local machine to connect to."
-              },
-              "localPort": {
+            "anyOf": [
+              {
                 "type": "number",
                 "minimum": 1,
                 "maximum": 65535,
-                "description": "Port on the local machine to connect to."
+                "description": "Port to expose with default local/remote hosts and socket path."
               },
-              "remoteSocket": {
-                "type": "string",
-                "description": "Unix socket path to create in the remote workspace."
-              },
-              "remoteHost": {
-                "type": "string",
-                "default": "127.0.0.1",
-                "description": "Remote host/interface for the optional TCP listener."
-              },
-              "remotePort": {
-                "type": "number",
-                "minimum": 1,
-                "maximum": 65535,
-                "description": "Optional TCP port to listen on in the remote workspace."
+              {
+                "type": "object",
+                "anyOf": [
+                  {
+                    "required": [
+                      "port"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "localPort"
+                    ]
+                  }
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Stable mapping name. Defaults to port-<localPort>."
+                  },
+                  "port": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 65535,
+                    "description": "Port to use for both localPort and remotePort unless they are explicitly set."
+                  },
+                  "localHost": {
+                    "type": "string",
+                    "default": "127.0.0.1",
+                    "description": "Host on the local machine to connect to."
+                  },
+                  "localPort": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 65535,
+                    "description": "Port on the local machine to connect to."
+                  },
+                  "remoteSocket": {
+                    "type": "string",
+                    "description": "Unix socket path to create in the remote workspace. Defaults to /tmp/vscode-port-bridge/<name>.sock."
+                  },
+                  "remoteHost": {
+                    "type": "string",
+                    "default": "127.0.0.1",
+                    "description": "Remote host/interface for the TCP listener."
+                  },
+                  "remotePort": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 65535,
+                    "description": "TCP port to listen on in the remote workspace."
+                  }
+                }
               }
-            }
+            ]
           }
         },
         "portBridge.controlReconnectDelayMs": {

@@ -13,35 +13,35 @@ export interface Frame {
   readonly payload: Buffer;
 }
 
-export function encodeFrame(_type: FrameType, _sessionId: number, _payload?: Uint8Array): Buffer {
-  const _body = _payload ? Buffer.from(_payload) : Buffer.alloc(0);
-  const _frame = Buffer.allocUnsafe(HEADER_LENGTH + _body.length);
-  _frame.writeUInt8(_type, 0);
-  _frame.writeUInt32BE(_sessionId, 1);
-  _frame.writeUInt32BE(_body.length, 5);
-  _body.copy(_frame, HEADER_LENGTH);
-  return _frame;
+export function encodeFrame(type: FrameType, sessionId: number, payload?: Uint8Array): Buffer {
+  const body = payload ? Buffer.from(payload) : Buffer.alloc(0);
+  const frame = Buffer.allocUnsafe(HEADER_LENGTH + body.length);
+  frame.writeUInt8(type, 0);
+  frame.writeUInt32BE(sessionId, 1);
+  frame.writeUInt32BE(body.length, 5);
+  body.copy(frame, HEADER_LENGTH);
+  return frame;
 }
 
 export class FrameReader {
-  private _buffer = Buffer.alloc(0);
+  private buffer = Buffer.alloc(0);
 
-  push(_chunk: Uint8Array, _onFrame: (_frame: Frame) => void): void {
-    this._buffer = Buffer.concat([this._buffer, Buffer.from(_chunk)]);
+  push(chunk: Uint8Array, onFrame: (frame: Frame) => void): void {
+    this.buffer = Buffer.concat([this.buffer, Buffer.from(chunk)]);
 
-    while (this._buffer.length >= HEADER_LENGTH) {
-      const _type = this._buffer.readUInt8(0);
-      const _sessionId = this._buffer.readUInt32BE(1);
-      const _payloadLength = this._buffer.readUInt32BE(5);
-      const _frameLength = HEADER_LENGTH + _payloadLength;
+    while (this.buffer.length >= HEADER_LENGTH) {
+      const type = this.buffer.readUInt8(0);
+      const sessionId = this.buffer.readUInt32BE(1);
+      const payloadLength = this.buffer.readUInt32BE(5);
+      const frameLength = HEADER_LENGTH + payloadLength;
 
-      if (this._buffer.length < _frameLength) {
+      if (this.buffer.length < frameLength) {
         return;
       }
 
-      const _payload = this._buffer.subarray(HEADER_LENGTH, _frameLength);
-      this._buffer = this._buffer.subarray(_frameLength);
-      _onFrame({ type: _type as FrameType, sessionId: _sessionId, payload: _payload });
+      const payload = this.buffer.subarray(HEADER_LENGTH, frameLength);
+      this.buffer = this.buffer.subarray(frameLength);
+      onFrame({ type: type as FrameType, sessionId, payload });
     }
   }
 }

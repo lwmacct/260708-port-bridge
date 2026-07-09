@@ -18,185 +18,185 @@ interface Session {
 }
 
 class LocalBridge {
-  private readonly _output = vscode.window.createOutputChannel('Port Bridge Local');
-  private readonly _status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
-  private readonly _sessions = new Map<number, Session>();
-  private _control: net.Socket | undefined;
+  private readonly output = vscode.window.createOutputChannel('Port Bridge Local');
+  private readonly status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
+  private readonly sessions = new Map<number, Session>();
+  private control: net.Socket | undefined;
 
   constructor() {
-    this._status.command = 'portBridge.local.showStatus';
-    this._status.text = '$(plug) Port Bridge Local: waiting';
-    this._status.show();
+    this.status.command = 'portBridge.local.showStatus';
+    this.status.text = '$(plug) Port Bridge Local: waiting';
+    this.status.show();
   }
 
   dispose(): void {
-    this.__disconnectControl();
-    this._status.dispose();
-    this._output.dispose();
+    this.disconnectControl();
+    this.status.dispose();
+    this.output.dispose();
   }
 
   showStatus(): void {
-    const _state = this._control && !this._control.destroyed ? 'connected' : 'waiting';
+    const state = this.control && !this.control.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `Port Bridge Local is ${_state}. sessions=${this._sessions.size}`
+      `Port Bridge Local is ${state}. sessions=${this.sessions.size}`
     );
   }
 
-  connectControl(_payload: ConnectControlPayload): void {
-    this.__disconnectControl();
+  connectControl(payload: ConnectControlPayload): void {
+    this.disconnectControl();
 
-    const _url = new URL(_payload.uri);
-    const _port = Number(_url.port || (_url.protocol === 'https:' ? 443 : 80));
-    const _host = _url.hostname;
+    const url = new URL(payload.uri);
+    const port = Number(url.port || (url.protocol === 'https:' ? 443 : 80));
+    const host = url.hostname;
 
-    this.__log(`Connecting control channel to ${_host}:${_port} (${_payload.uri})`);
+    this.log(`Connecting control channel to ${host}:${port} (${payload.uri})`);
 
-    const _socket = net.connect({ host: _host, port: _port });
-    const _reader = new FrameReader();
-    this._control = _socket;
+    const socket = net.connect({ host, port });
+    const reader = new FrameReader();
+    this.control = socket;
 
-    _socket.setNoDelay(true);
+    socket.setNoDelay(true);
 
-    _socket.on('connect', () => {
-      this.__setStatus('connected');
-      this.__log('Control channel connected.');
+    socket.on('connect', () => {
+      this.setStatus('connected');
+      this.log('Control channel connected.');
     });
 
-    _socket.on('data', (_chunk) => {
-      _reader.push(typeof _chunk === 'string' ? Buffer.from(_chunk) : _chunk, (_frame) => {
-        this.__handleFrame(_frame);
+    socket.on('data', (chunk) => {
+      reader.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk, (frame) => {
+        this.handleFrame(frame);
       });
     });
 
-    _socket.on('error', (_error) => {
-      this.__log(`Control channel error: ${_error.message}`);
-      this.__setStatus('error');
+    socket.on('error', (error) => {
+      this.log(`Control channel error: ${error.message}`);
+      this.setStatus('error');
     });
 
-    _socket.on('close', () => {
-      if (this._control === _socket) {
-        this._control = undefined;
+    socket.on('close', () => {
+      if (this.control === socket) {
+        this.control = undefined;
       }
-      for (const _session of this._sessions.values()) {
-        _session.socket.destroy();
+      for (const session of this.sessions.values()) {
+        session.socket.destroy();
       }
-      this._sessions.clear();
-      this.__setStatus('waiting');
-      this.__log('Control channel closed.');
+      this.sessions.clear();
+      this.setStatus('waiting');
+      this.log('Control channel closed.');
     });
   }
 
-  private __handleFrame(_frame: Frame): void {
-    switch (_frame.type) {
+  private handleFrame(frame: Frame): void {
+    switch (frame.type) {
       case FrameType.Open:
-        this.__openSession(_frame);
+        this.openSession(frame);
         break;
       case FrameType.Data:
-        this._sessions.get(_frame.sessionId)?.socket.write(_frame.payload);
+        this.sessions.get(frame.sessionId)?.socket.write(frame.payload);
         break;
       case FrameType.Close:
       case FrameType.Error:
-        this.__closeSession(_frame.sessionId);
+        this.closeSession(frame.sessionId);
         break;
       default:
-        this.__log(`Ignoring unknown frame type ${_frame.type}`);
+        this.log(`Ignoring unknown frame type ${frame.type}`);
     }
   }
 
-  private __openSession(_frame: Frame): void {
-    const _payload = JSON.parse(_frame.payload.toString('utf8')) as OpenPayload;
-    const _socket = net.connect({
-      host: _payload.localHost,
-      port: _payload.localPort
+  private openSession(frame: Frame): void {
+    const payload = JSON.parse(frame.payload.toString('utf8')) as OpenPayload;
+    const socket = net.connect({
+      host: payload.localHost,
+      port: payload.localPort
     });
 
-    _socket.setNoDelay(true);
-    this._sessions.set(_frame.sessionId, {
-      socket: _socket,
-      mappingName: _payload.name
+    socket.setNoDelay(true);
+    this.sessions.set(frame.sessionId, {
+      socket,
+      mappingName: payload.name
     });
 
-    _socket.on('data', (_chunk) => {
-      this.__send(FrameType.Data, _frame.sessionId, typeof _chunk === 'string' ? Buffer.from(_chunk) : _chunk);
+    socket.on('data', (chunk) => {
+      this.send(FrameType.Data, frame.sessionId, typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
     });
 
-    _socket.on('error', (_error) => {
-      this.__log(`${_payload.name}: local connection error: ${_error.message}`);
-      this.__send(FrameType.Error, _frame.sessionId, Buffer.from(_error.message, 'utf8'));
+    socket.on('error', (error) => {
+      this.log(`${payload.name}: local connection error: ${error.message}`);
+      this.send(FrameType.Error, frame.sessionId, Buffer.from(error.message, 'utf8'));
     });
 
-    _socket.on('close', () => {
-      this._sessions.delete(_frame.sessionId);
-      this.__send(FrameType.Close, _frame.sessionId);
+    socket.on('close', () => {
+      this.sessions.delete(frame.sessionId);
+      this.send(FrameType.Close, frame.sessionId);
     });
   }
 
-  private __closeSession(_sessionId: number): void {
-    const _session = this._sessions.get(_sessionId);
-    if (!_session) {
+  private closeSession(sessionId: number): void {
+    const session = this.sessions.get(sessionId);
+    if (!session) {
       return;
     }
 
-    this._sessions.delete(_sessionId);
-    _session.socket.destroy();
+    this.sessions.delete(sessionId);
+    session.socket.destroy();
   }
 
-  private __send(_type: FrameType, _sessionId: number, _payload?: Uint8Array): void {
-    if (!this._control || this._control.destroyed) {
+  private send(type: FrameType, sessionId: number, payload?: Uint8Array): void {
+    if (!this.control || this.control.destroyed) {
       return;
     }
 
-    this._control.write(encodeFrame(_type, _sessionId, _payload));
+    this.control.write(encodeFrame(type, sessionId, payload));
   }
 
-  private __disconnectControl(): void {
-    for (const _session of this._sessions.values()) {
-      _session.socket.destroy();
+  private disconnectControl(): void {
+    for (const session of this.sessions.values()) {
+      session.socket.destroy();
     }
-    this._sessions.clear();
+    this.sessions.clear();
 
-    if (this._control) {
-      this._control.destroy();
-      this._control = undefined;
+    if (this.control) {
+      this.control.destroy();
+      this.control = undefined;
     }
   }
 
-  private __setStatus(_state: string): void {
-    this._status.text = `$(plug) Port Bridge Local: ${_state}`;
+  private setStatus(state: string): void {
+    this.status.text = `$(plug) Port Bridge Local: ${state}`;
   }
 
-  private __log(_message: string): void {
-    this._output.appendLine(`[${new Date().toISOString()}] ${_message}`);
+  private log(message: string): void {
+    this.output.appendLine(`[${new Date().toISOString()}] ${message}`);
   }
 }
 
-let _bridge: LocalBridge | undefined;
+let bridge: LocalBridge | undefined;
 
-function __isRunningInUiHost(): boolean {
-  const _extension = vscode.extensions.getExtension('lwmacct.port-bridge-local');
-  return _extension?.extensionKind === vscode.ExtensionKind.UI;
+function isRunningInUiHost(): boolean {
+  const extension = vscode.extensions.getExtension('lwmacct.port-bridge-local');
+  return extension?.extensionKind === vscode.ExtensionKind.UI;
 }
 
-export function activate(_context: vscode.ExtensionContext): void {
-  if (!__isRunningInUiHost()) {
+export function activate(context: vscode.ExtensionContext): void {
+  if (!isRunningInUiHost()) {
     void vscode.window.showErrorMessage(
       'Port Bridge Local 必须运行在本机 UI extension host。请把它安装/启用在本机侧，不要作为远程 workspace 扩展运行。'
     );
     return;
   }
 
-  _bridge = new LocalBridge();
-  _context.subscriptions.push(
-    _bridge,
-    vscode.commands.registerCommand('portBridge.local.connectControl', (_payload: ConnectControlPayload) => {
-      _bridge?.connectControl(_payload);
+  bridge = new LocalBridge();
+  context.subscriptions.push(
+    bridge,
+    vscode.commands.registerCommand('portBridge.local.connectControl', (payload: ConnectControlPayload) => {
+      bridge?.connectControl(payload);
     }),
     vscode.commands.registerCommand('portBridge.local.showStatus', () => {
-      _bridge?.showStatus();
+      bridge?.showStatus();
     })
   );
 }
 
 export function deactivate(): void {
-  _bridge?.dispose();
+  bridge?.dispose();
 }
