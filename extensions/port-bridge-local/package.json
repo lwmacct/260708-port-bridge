@@ -5,6 +5,10 @@
   "version": "0.10.260709",
   "publisher": "lwmacct",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lwmacct/260708-port-bridge"
+  },
   "engines": {
     "vscode": "^1.128.0",
     "npm": "please-use-pnpm"
