@@ -18,13 +18,13 @@ interface Session {
 }
 
 class LocalBridge {
-  private readonly _output = vscode.window.createOutputChannel('Local Port Bridge Local');
+  private readonly _output = vscode.window.createOutputChannel('Port Bridge Local');
   private readonly _status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
   private readonly _sessions = new Map<number, Session>();
   private _control: net.Socket | undefined;
 
   constructor() {
-    this._status.command = 'localPortBridge.local.showStatus';
+    this._status.command = 'portBridge.local.showStatus';
     this._status.text = '$(plug) Port Bridge Local: waiting';
     this._status.show();
   }
@@ -38,7 +38,7 @@ class LocalBridge {
   showStatus(): void {
     const _state = this._control && !this._control.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `Local Port Bridge Local is ${_state}. sessions=${this._sessions.size}`
+      `Port Bridge Local is ${_state}. sessions=${this._sessions.size}`
     );
   }
 
@@ -188,10 +188,10 @@ export function activate(_context: vscode.ExtensionContext): void {
   _bridge = new LocalBridge();
   _context.subscriptions.push(
     _bridge,
-    vscode.commands.registerCommand('localPortBridge.local.connectControl', (_payload: ConnectControlPayload) => {
+    vscode.commands.registerCommand('portBridge.local.connectControl', (_payload: ConnectControlPayload) => {
       _bridge?.connectControl(_payload);
     }),
-    vscode.commands.registerCommand('localPortBridge.local.showStatus', () => {
+    vscode.commands.registerCommand('portBridge.local.showStatus', () => {
       _bridge?.showStatus();
     })
   );

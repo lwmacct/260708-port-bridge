@@ -1,6 +1,6 @@
 # Port Bridge Remote
 
-Remote-side endpoint for Local Port Bridge. Install it together with
+Remote-side endpoint for Port Bridge. Install it together with
 `lwmacct.port-bridge-local`.
 
 This extension must run in the remote workspace extension host. It validates the

@@ -1,8 +1,8 @@
 {
   "name": "port-bridge-local",
   "displayName": "Port Bridge Local",
-  "description": "Local-side endpoint for Local Port Bridge.",
-  "version": "0.4.260708",
+  "description": "Local-side endpoint for Port Bridge.",
+  "version": "0.5.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "engines": {
@@ -15,7 +15,7 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:localPortBridge.local.connectControl"
+    "onCommand:portBridge.local.connectControl"
   ],
   "extensionKind": [
     "ui"
@@ -23,8 +23,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "localPortBridge.local.showStatus",
-        "title": "Local Port Bridge: Show Local Status"
+        "command": "portBridge.local.showStatus",
+        "title": "Port Bridge: Show Local Status"
       }
     ]
   },
@@ -32,6 +32,6 @@
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
     "typecheck": "tsc -p . --noEmit",
-    "package": "pnpm run compile && vsce package --allow-missing-repository --out ../../port-bridge-local-0.4.260708.vsix"
+    "package": "pnpm run compile && vsce package --allow-missing-repository --out ../../port-bridge-local-0.5.260709.vsix"
   }
 }

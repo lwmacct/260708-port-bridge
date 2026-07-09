@@ -19,7 +19,7 @@ interface Session {
 }
 
 class RemoteBridge {
-  private readonly _output = vscode.window.createOutputChannel('Local Port Bridge Remote');
+  private readonly _output = vscode.window.createOutputChannel('Port Bridge Remote');
   private readonly _status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 98);
   private readonly _sessions = new Map<number, Session>();
   private readonly _servers: net.Server[] = [];
@@ -33,9 +33,9 @@ class RemoteBridge {
   private _starting: Promise<void> | undefined;
 
   constructor() {
-    this._status.command = 'localPortBridge.remote.reconnectControl';
+    this._status.command = 'portBridge.remote.reconnectControl';
     this._status.text = '$(plug) Port Bridge Remote: stopped';
-    this._status.tooltip = 'Reconnect Local Port Bridge control channel';
+    this._status.tooltip = 'Reconnect Port Bridge control channel';
     this._status.show();
   }
 
@@ -93,7 +93,7 @@ class RemoteBridge {
     const _state = this._controlServer ? 'running' : 'stopped';
     const _control = this._controlSocket && !this._controlSocket.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `Local Port Bridge Remote is ${_state}. control=${_control}, ` +
+      `Port Bridge Remote is ${_state}. control=${_control}, ` +
       `controlPort=${this._controlPort ?? 'none'}, forwarded=${this._lastForwardedControlUri ?? 'none'}, ` +
       `sessions=${this._sessions.size}`
     );
@@ -117,7 +117,7 @@ class RemoteBridge {
     const _mappings = this.__readMappings();
     if (_mappings.length === 0) {
       this.__setStatus('no mappings');
-      this.__log('No localPortBridge.mappings are configured.');
+      this.__log('No portBridge.mappings are configured.');
       this._running = false;
       return;
     }
@@ -171,7 +171,7 @@ class RemoteBridge {
     this.__log(`Forwarded control URI: ${_localUri.toString()}`);
 
     try {
-      await vscode.commands.executeCommand('localPortBridge.local.connectControl', {
+      await vscode.commands.executeCommand('portBridge.local.connectControl', {
         uri: _localUri.toString()
       });
     } catch (_error) {
@@ -188,7 +188,7 @@ class RemoteBridge {
       return;
     }
 
-    const _config = vscode.workspace.getConfiguration('localPortBridge');
+    const _config = vscode.workspace.getConfiguration('portBridge');
     const _delayMs = _config.get<number>('controlReconnectDelayMs', 1000);
     const _delay = Math.min(Math.max(_delayMs, 100), 30000);
     this.__setStatus(`reconnecting in ${_delay}ms`);
@@ -335,7 +335,7 @@ class RemoteBridge {
   }
 
   private __readMappings(): Mapping[] {
-    const _config = vscode.workspace.getConfiguration('localPortBridge');
+    const _config = vscode.workspace.getConfiguration('portBridge');
     const _rawMappings = _config.get<unknown[]>('mappings', []);
     const _mappings: Mapping[] = [];
 
@@ -410,17 +410,17 @@ export function activate(_context: vscode.ExtensionContext): void {
   _bridge = new RemoteBridge();
   _context.subscriptions.push(
     _bridge,
-    vscode.commands.registerCommand('localPortBridge.remote.start', () => _bridge?.start()),
-    vscode.commands.registerCommand('localPortBridge.remote.stop', () => _bridge?.stop()),
-    vscode.commands.registerCommand('localPortBridge.remote.restart', () => _bridge?.restart()),
-    vscode.commands.registerCommand('localPortBridge.remote.reconnectControl', () => _bridge?.reconnectControl()),
-    vscode.commands.registerCommand('localPortBridge.remote.showStatus', () => _bridge?.showStatus())
+    vscode.commands.registerCommand('portBridge.remote.start', () => _bridge?.start()),
+    vscode.commands.registerCommand('portBridge.remote.stop', () => _bridge?.stop()),
+    vscode.commands.registerCommand('portBridge.remote.restart', () => _bridge?.restart()),
+    vscode.commands.registerCommand('portBridge.remote.reconnectControl', () => _bridge?.reconnectControl()),
+    vscode.commands.registerCommand('portBridge.remote.showStatus', () => _bridge?.showStatus())
   );
 
-  const _config = vscode.workspace.getConfiguration('localPortBridge');
+  const _config = vscode.workspace.getConfiguration('portBridge');
   if (_config.get<boolean>('autoStart', true)) {
     void _bridge.start().catch((_error) => {
-      void vscode.window.showErrorMessage(`Local Port Bridge remote failed to start: ${_error.message}`);
+      void vscode.window.showErrorMessage(`Port Bridge remote failed to start: ${_error.message}`);
     });
   }
 }

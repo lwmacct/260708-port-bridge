@@ -1,8 +1,8 @@
 {
   "name": "port-bridge-remote",
   "displayName": "Port Bridge Remote",
-  "description": "Remote-side endpoint for Local Port Bridge.",
-  "version": "0.4.260708",
+  "description": "Remote-side endpoint for Port Bridge.",
+  "version": "0.5.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "engines": {
@@ -22,35 +22,35 @@
   "contributes": {
     "commands": [
       {
-        "command": "localPortBridge.remote.start",
-        "title": "Local Port Bridge: Start Remote"
+        "command": "portBridge.remote.start",
+        "title": "Port Bridge: Start Remote"
       },
       {
-        "command": "localPortBridge.remote.stop",
-        "title": "Local Port Bridge: Stop Remote"
+        "command": "portBridge.remote.stop",
+        "title": "Port Bridge: Stop Remote"
       },
       {
-        "command": "localPortBridge.remote.restart",
-        "title": "Local Port Bridge: Restart Remote"
+        "command": "portBridge.remote.restart",
+        "title": "Port Bridge: Restart Remote"
       },
       {
-        "command": "localPortBridge.remote.reconnectControl",
-        "title": "Local Port Bridge: Reconnect Control Channel"
+        "command": "portBridge.remote.reconnectControl",
+        "title": "Port Bridge: Reconnect Control Channel"
       },
       {
-        "command": "localPortBridge.remote.showStatus",
-        "title": "Local Port Bridge: Show Remote Status"
+        "command": "portBridge.remote.showStatus",
+        "title": "Port Bridge: Show Remote Status"
       }
     ],
     "configuration": {
-      "title": "Local Port Bridge",
+      "title": "Port Bridge",
       "properties": {
-        "localPortBridge.autoStart": {
+        "portBridge.autoStart": {
           "type": "boolean",
           "default": true,
-          "description": "Start configured local port bridges automatically in remote windows."
+          "description": "Start configured port bridges automatically in remote windows."
         },
-        "localPortBridge.mappings": {
+        "portBridge.mappings": {
           "type": "array",
           "default": [],
           "description": "Local-to-remote port mappings.",
@@ -94,7 +94,7 @@
             }
           }
         },
-        "localPortBridge.controlReconnectDelayMs": {
+        "portBridge.controlReconnectDelayMs": {
           "type": "number",
           "default": 1000,
           "minimum": 100,
@@ -108,6 +108,6 @@
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
     "typecheck": "tsc -p . --noEmit",
-    "package": "pnpm run compile && vsce package --allow-missing-repository --out ../../port-bridge-remote-0.4.260708.vsix"
+    "package": "pnpm run compile && vsce package --allow-missing-repository --out ../../port-bridge-remote-0.5.260709.vsix"
   }
 }
