@@ -32,7 +32,7 @@ interface UnixEndpoint {
 }
 
 class LocalRelay {
-  private readonly output = vscode.window.createOutputChannel('PortRelay Local');
+  private readonly output = vscode.window.createOutputChannel('Port Relay Local');
   private readonly status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
   private readonly sessions = new Map<number, Session>();
   private readonly pendingData = new Map<number, Buffer[]>();
@@ -41,7 +41,7 @@ class LocalRelay {
 
   constructor() {
     this.status.command = 'portrelay.local.showStatus';
-    this.status.text = '$(plug) PortRelay Local: waiting';
+    this.status.text = '$(plug) Port Relay Local: waiting';
     this.status.show();
   }
 
@@ -54,7 +54,7 @@ class LocalRelay {
   showStatus(): void {
     const state = this.control && !this.control.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `PortRelay Local is ${state}. sessions=${this.sessions.size}`
+      `Port Relay Local is ${state}. sessions=${this.sessions.size}`
     );
   }
 
@@ -285,7 +285,7 @@ class LocalRelay {
   }
 
   private setStatus(state: string): void {
-    this.status.text = `$(plug) PortRelay Local: ${state}`;
+    this.status.text = `$(plug) Port Relay Local: ${state}`;
   }
 
   private log(message: string): void {
@@ -303,7 +303,7 @@ function isRunningInUiHost(): boolean {
 export function activate(context: vscode.ExtensionContext): void {
   if (!isRunningInUiHost()) {
     void vscode.window.showErrorMessage(
-      'PortRelay Local 必须运行在本机 UI extension host。请把它安装/启用在本机侧，不要作为远程 workspace 扩展运行。'
+      'Port Relay Local 必须运行在本机 UI extension host。请把它安装/启用在本机侧，不要作为远程 workspace 扩展运行。'
     );
     return;
   }

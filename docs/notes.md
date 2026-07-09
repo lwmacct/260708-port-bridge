@@ -1,6 +1,6 @@
 # 踩坑和尝试记录
 
-本文档记录 PortRelay 开发过程中遇到的 VS Code Remote extension host、Proposed API 和 tunnel 生命周期相关问题。
+本文档记录 Port Relay 开发过程中遇到的 VS Code Remote extension host、Proposed API 和 tunnel 生命周期相关问题。
 
 ## remote 扩展不能依赖 local 扩展
 
@@ -60,7 +60,7 @@ portrelay-remote 127.0.0.1:<random-control-port>
 
 - 已有连接会断开。
 - remote 扩展会在 `portrelay.controlReconnectDelayMs` 后自动重新创建 tunnel。
-- 也可以执行 `PortRelay: Reconnect Control Channel` 手动重连。
+- 也可以执行 `Port Relay: Reconnect Control Channel` 手动重连。
 - remote 状态栏项点击后也会触发重连。
 
 默认重连延迟：

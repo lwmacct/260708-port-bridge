@@ -1,6 +1,6 @@
 # 发布
 
-本文档记录 PortRelay 扩展发布到 GitHub Release 和 Visual Studio Marketplace 的流程。
+本文档记录 Port Relay 扩展发布到 GitHub Release 和 Visual Studio Marketplace 的流程。
 
 ## 相关链接
 

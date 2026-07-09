@@ -1,4 +1,4 @@
-# PortRelay Local
+# Port Relay Local
 
 [Chinese documentation](README.md)
 
@@ -6,19 +6,19 @@
 [![Release](https://img.shields.io/github/v/release/lwmacct/260708-portrelay?label=release)](https://github.com/lwmacct/260708-portrelay/releases)
 [![License](https://img.shields.io/github/license/lwmacct/260708-portrelay)](https://github.com/lwmacct/260708-portrelay/blob/main/LICENSE)
 
-PortRelay Local is the local-machine half of PortRelay. It runs in the VS Code UI extension host and connects to services that only exist on your computer, such as `127.0.0.1:9222`.
+Port Relay Local is the local-machine half of Port Relay. It runs in the VS Code UI extension host and connects to services that only exist on your computer, such as `127.0.0.1:9222`.
 
 Install this extension together with `lwmacct.portrelay-remote`. The local extension does not create remote sockets or remote ports by itself; it waits for the remote extension to create the control tunnel and then forwards raw TCP bytes to local targets.
 
 ## What It Does
 
-PortRelay exposes a local-only endpoint inside a VS Code remote workspace:
+Port Relay exposes a local-only endpoint inside a VS Code remote workspace:
 
 ```text
 local machine <local-endpoint>
-  -> PortRelay Local
+  -> Port Relay Local
   -> VS Code forwarded control tunnel
-  -> PortRelay Remote
+  -> Port Relay Remote
   -> remote <remote-endpoint>
 ```
 
@@ -30,7 +30,7 @@ Typical use cases:
 
 ## Required Companion Extension
 
-PortRelay is split into two extensions because VS Code has separate local and remote extension hosts:
+Port Relay is split into two extensions because VS Code has separate local and remote extension hosts:
 
 ```text
 lwmacct.portrelay-local
@@ -112,14 +112,14 @@ Advanced mapping:
 This extension contributes:
 
 ```text
-PortRelay: Show Local Status
+Port Relay: Show Local Status
 ```
 
 The remote companion contributes start, stop, restart, reconnect, and status commands.
 
 ## Security Notes
 
-PortRelay moves local capabilities into a remote workspace. Treat forwarded endpoints as sensitive, especially Chrome CDP and other debugging ports.
+Port Relay moves local capabilities into a remote workspace. Treat forwarded endpoints as sensitive, especially Chrome CDP and other debugging ports.
 
 Recommended defaults:
 

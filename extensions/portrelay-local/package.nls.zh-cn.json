@@ -1,4 +1,4 @@
 {
-  "extension.description": "PortRelay 的本机侧端点。",
-  "commands.showLocalStatus.title": "PortRelay: 显示本机状态"
+  "extension.description": "Port Relay 的本机侧扩展，用于把本机 TCP 和 Unix socket 端点转发到 VS Code 远程工作区。",
+  "commands.showLocalStatus.title": "Port Relay: 显示本机状态"
 }

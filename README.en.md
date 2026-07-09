@@ -1,8 +1,8 @@
-# PortRelay
+# Port Relay
 
 [Chinese documentation](README.md)
 
-PortRelay exposes local `127.0.0.1:<port>` endpoints inside VS Code remote workspaces, including Dev Containers and Remote SSH.
+Port Relay exposes local `127.0.0.1:<port>` endpoints inside VS Code remote workspaces, including Dev Containers and Remote SSH.
 
 It solves the reverse direction of regular VS Code port forwarding:
 
@@ -16,20 +16,20 @@ A typical use case is letting Playwright, Codex MCP, or other tools inside a rem
 
 ## Installation
 
-PortRelay is made of two companion extensions. Install both:
+Port Relay is made of two companion extensions. Install both:
 
-- [PortRelay Local](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-local) (`lwmacct.portrelay-local`)
-- [PortRelay Remote](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-remote) (`lwmacct.portrelay-remote`)
+- [Port Relay Local](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-local) (`lwmacct.portrelay-local`)
+- [Port Relay Remote](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-remote) (`lwmacct.portrelay-remote`)
 
 The extensions run in different extension hosts:
 
 ```text
-PortRelay Local
+Port Relay Local
   extensionKind: ["ui"]
   runs in the local VS Code UI side
   connects to local <local-endpoint>
 
-PortRelay Remote
+Port Relay Remote
   extensionKind: ["workspace"]
   runs in the remote workspace/container/SSH side
   creates remote TCP listeners and Unix sockets
@@ -151,7 +151,7 @@ command = "npx"
 args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 ```
 
-The MCP server runs on the remote workspace side, so `127.0.0.1:9222` is forwarded to the local browser through PortRelay.
+The MCP server runs on the remote workspace side, so `127.0.0.1:9222` is forwarded to the local browser through Port Relay.
 
 ## Configuration
 
@@ -251,17 +251,17 @@ Delay, in milliseconds, before the remote extension recreates the internal contr
 The Remote extension contributes:
 
 ```text
-PortRelay: Start Remote
-PortRelay: Stop Remote
-PortRelay: Restart Remote
-PortRelay: Reconnect Control Channel
-PortRelay: Show Remote Status
+Port Relay: Start Remote
+Port Relay: Stop Remote
+Port Relay: Restart Remote
+Port Relay: Reconnect Control Channel
+Port Relay: Show Remote Status
 ```
 
 The Local extension contributes:
 
 ```text
-PortRelay: Show Local Status
+Port Relay: Show Local Status
 ```
 
 ## How It Works
@@ -292,7 +292,7 @@ More development notes are in [docs/notes.md](docs/notes.md).
 - Both Local and Remote extensions must be installed.
 - The current control channel assumes `vscode.env.asExternalUri()` returns a locally reachable TCP URI in desktop Remote/Dev Containers/Remote SSH.
 - VS Code for the Web or some cloud tunnel environments may return an HTTPS proxy URI; those environments need additional handling.
-- PortRelay exposes local endpoint capabilities to the remote environment. CDP ports are powerful, so prefer binding the local side to `127.0.0.1`, and prefer remote Unix sockets or remote `127.0.0.1`. Do not bind privileged debug protocols to `0.0.0.0`.
+- Port Relay exposes local endpoint capabilities to the remote environment. CDP ports are powerful, so prefer binding the local side to `127.0.0.1`, and prefer remote Unix sockets or remote `127.0.0.1`. Do not bind privileged debug protocols to `0.0.0.0`.
 
 ## Development
 

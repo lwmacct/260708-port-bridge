@@ -1,7 +1,7 @@
 {
   "name": "@lwmacct/260708-portrelay",
   "private": true,
-  "version": "0.13.260709",
+  "version": "0.14.260710",
   "license": "MIT",
   "packageManager": "pnpm@11.10.0",
   "engines": {

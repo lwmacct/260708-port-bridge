@@ -1,8 +1,8 @@
 {
   "name": "portrelay-local",
-  "displayName": "PortRelay Local",
+  "displayName": "Port Relay Local",
   "description": "%extension.description%",
-  "version": "0.13.260709",
+  "version": "0.14.260710",
   "publisher": "lwmacct",
   "license": "MIT",
   "repository": {
@@ -34,10 +34,30 @@
   "preview": false,
   "pricing": "Free",
   "keywords": [
+    "port",
+    "relay",
+    "port-relay",
+    "portrelay",
     "port-forwarding",
+    "reverse-port-forwarding",
+    "reverse-tunnel",
+    "local-port",
+    "localhost",
+    "endpoint",
+    "tcp",
+    "socket",
+    "unix-socket",
+    "remote",
     "remote-development",
+    "remote-ssh",
+    "dev-container",
+    "dev-containers",
     "tunnel",
-    "vscode-remote"
+    "vscode-remote",
+    "chrome",
+    "chromium",
+    "cdp",
+    "playwright"
   ],
   "engines": {
     "vscode": "^1.128.0",

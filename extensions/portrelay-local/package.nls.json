@@ -1,4 +1,4 @@
 {
-  "extension.description": "Local-side endpoint for PortRelay.",
-  "commands.showLocalStatus.title": "PortRelay: Show Local Status"
+  "extension.description": "Local side of Port Relay, a port relay for exposing local TCP and Unix socket endpoints inside VS Code remote workspaces.",
+  "commands.showLocalStatus.title": "Port Relay: Show Local Status"
 }

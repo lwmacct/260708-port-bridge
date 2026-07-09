@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
-  <title id="title">PortRelay</title>
+  <title id="title">Port Relay</title>
   <desc id="desc">An abstract relay connecting a local endpoint to a remote endpoint.</desc>
   <defs>
     <linearGradient id="bg" x1="20" y1="10" x2="108" y2="118" gradientUnits="userSpaceOnUse">

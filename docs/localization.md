@@ -1,6 +1,6 @@
 # Localization and README Language Policy
 
-本文档记录 PortRelay 的语言策略、VS Code 扩展展示限制，以及当前实现依据。
+本文档记录 Port Relay 的语言策略、VS Code 扩展展示限制，以及当前实现依据。
 
 ## 目标
 

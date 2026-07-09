@@ -34,7 +34,7 @@ const DEFAULT_HOST = '127.0.0.1';
 const ENDPOINT_PATTERN = 'host:port, tcp:host:port, tcp://host:port, or unix:/absolute/path.sock';
 
 class RemoteRelay {
-  private readonly output = vscode.window.createOutputChannel('PortRelay Remote');
+  private readonly output = vscode.window.createOutputChannel('Port Relay Remote');
   private readonly status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 98);
   private readonly sessions = new Map<number, Session>();
   private readonly servers: net.Server[] = [];
@@ -49,8 +49,8 @@ class RemoteRelay {
 
   constructor() {
     this.status.command = 'portrelay.remote.reconnectControl';
-    this.status.text = '$(plug) PortRelay Remote: stopped';
-    this.status.tooltip = 'Reconnect PortRelay control channel';
+    this.status.text = '$(plug) Port Relay Remote: stopped';
+    this.status.tooltip = 'Reconnect Port Relay control channel';
     this.status.show();
   }
 
@@ -108,7 +108,7 @@ class RemoteRelay {
     const state = this.controlServer ? 'running' : 'stopped';
     const control = this.controlSocket && !this.controlSocket.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `PortRelay Remote is ${state}. control=${control}, ` +
+      `Port Relay Remote is ${state}. control=${control}, ` +
       `controlPort=${this.controlPort ?? 'none'}, forwarded=${this.lastForwardedControlUri ?? 'none'}, ` +
       `sessions=${this.sessions.size}`
     );
@@ -187,7 +187,7 @@ class RemoteRelay {
       });
     } catch (error) {
       throw new Error(
-        `PortRelay Local is not available on the UI side. Install and enable ` +
+        `Port Relay Local is not available on the UI side. Install and enable ` +
         `lwmacct.portrelay-local locally, then reload the window. ` +
         `Original error: ${error instanceof Error ? error.message : String(error)}`
       );
@@ -514,7 +514,7 @@ class RemoteRelay {
   }
 
   private setStatus(state: string): void {
-    this.status.text = `$(plug) PortRelay Remote: ${state}`;
+    this.status.text = `$(plug) Port Relay Remote: ${state}`;
   }
 
   private log(message: string): void {
@@ -532,14 +532,14 @@ function isRunningInWorkspaceHost(): boolean {
 export function activate(context: vscode.ExtensionContext): void {
   if (!isRunningInWorkspaceHost()) {
     void vscode.window.showErrorMessage(
-      'PortRelay Remote 必须运行在远程 workspace extension host。请把它安装/启用在远程侧，不要作为本机 UI 扩展运行。'
+      'Port Relay Remote 必须运行在远程 workspace extension host。请把它安装/启用在远程侧，不要作为本机 UI 扩展运行。'
     );
     return;
   }
 
   if (!vscode.env.remoteName) {
     void vscode.window.showErrorMessage(
-      'PortRelay Remote 只能在 Remote SSH、Dev Containers 等远程窗口中使用。'
+      'Port Relay Remote 只能在 Remote SSH、Dev Containers 等远程窗口中使用。'
     );
     return;
   }
@@ -557,7 +557,7 @@ export function activate(context: vscode.ExtensionContext): void {
   const config = vscode.workspace.getConfiguration('portrelay');
   if (config.get<boolean>('autoStart', true)) {
     void relay.start().catch((error) => {
-      void vscode.window.showErrorMessage(`PortRelay remote failed to start: ${error.message}`);
+      void vscode.window.showErrorMessage(`Port Relay remote failed to start: ${error.message}`);
     });
   }
 }

@@ -1,4 +1,4 @@
-# PortRelay Remote
+# Port Relay Remote
 
 [Chinese documentation](README.md)
 
@@ -6,20 +6,20 @@
 [![Release](https://img.shields.io/github/v/release/lwmacct/260708-portrelay?label=release)](https://github.com/lwmacct/260708-portrelay/releases)
 [![License](https://img.shields.io/github/license/lwmacct/260708-portrelay)](https://github.com/lwmacct/260708-portrelay/blob/main/LICENSE)
 
-PortRelay Remote is the remote-workspace half of PortRelay. It runs in the VS Code workspace extension host and creates remote TCP listeners and Unix sockets that forward to endpoints on your local machine.
+Port Relay Remote is the remote-workspace half of Port Relay. It runs in the VS Code workspace extension host and creates remote TCP listeners and Unix sockets that forward to endpoints on your local machine.
 
 Install this extension together with `lwmacct.portrelay-local`. The remote extension owns configuration, starts the relay, creates the internal control tunnel, and asks the local extension to connect back to local targets.
 
 ## What It Does
 
-PortRelay exposes a local-only endpoint inside a VS Code remote workspace:
+Port Relay exposes a local-only endpoint inside a VS Code remote workspace:
 
 ```text
 remote process
   -> remote <remote-endpoint>
-  -> PortRelay Remote
+  -> Port Relay Remote
   -> VS Code forwarded control tunnel
-  -> PortRelay Local
+  -> Port Relay Local
   -> local machine <local-endpoint>
 ```
 
@@ -29,11 +29,11 @@ Typical use cases:
 - Let remote tools call a local development service without making that service public.
 - Create a stable Unix socket path in the remote filesystem for tools that support sockets.
 
-HTTP, WebSocket, CDP, and other protocols are forwarded as raw TCP bytes. PortRelay does not parse or terminate the protocol.
+HTTP, WebSocket, CDP, and other protocols are forwarded as raw TCP bytes. Port Relay does not parse or terminate the protocol.
 
 ## Required Companion Extension
 
-PortRelay is split into two extensions because VS Code has separate local and remote extension hosts:
+Port Relay is split into two extensions because VS Code has separate local and remote extension hosts:
 
 ```text
 lwmacct.portrelay-local
@@ -177,18 +177,18 @@ main().catch((error) => {
 This extension contributes:
 
 ```text
-PortRelay: Start Remote
-PortRelay: Stop Remote
-PortRelay: Restart Remote
-PortRelay: Reconnect Control Channel
-PortRelay: Show Remote Status
+Port Relay: Start Remote
+Port Relay: Stop Remote
+Port Relay: Restart Remote
+Port Relay: Reconnect Control Channel
+Port Relay: Show Remote Status
 ```
 
 If `portrelay.autoStart` is `true`, mappings start automatically after the remote window starts.
 
 ## Security Notes
 
-PortRelay moves local capabilities into a remote workspace. Treat forwarded endpoints as sensitive, especially Chrome CDP and other debugging ports.
+Port Relay moves local capabilities into a remote workspace. Treat forwarded endpoints as sensitive, especially Chrome CDP and other debugging ports.
 
 Recommended defaults:
 
