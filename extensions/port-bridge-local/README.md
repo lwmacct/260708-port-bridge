@@ -1,55 +1,55 @@
 # Port Bridge Local
 
-[Chinese documentation](https://github.com/lwmacct/260708-port-bridge/blob/main/extensions/port-bridge-local/README.zh-CN.md)
+[英文文档](https://github.com/lwmacct/260708-port-bridge/blob/main/extensions/port-bridge-local/README.en.md)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/lwmacct/260708-port-bridge/ci.yml?branch=main&label=ci)](https://github.com/lwmacct/260708-port-bridge/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/lwmacct/260708-port-bridge?label=release)](https://github.com/lwmacct/260708-port-bridge/releases)
 [![License](https://img.shields.io/github/license/lwmacct/260708-port-bridge)](https://github.com/lwmacct/260708-port-bridge/blob/main/LICENSE)
 
-Port Bridge Local is the local-machine half of Port Bridge. It runs in the VS Code UI extension host and connects to services that only exist on your computer, such as `127.0.0.1:9222`.
+Port Bridge Local 是 Port Bridge 的本机侧扩展。它运行在 VS Code 的 UI extension host 中，负责连接只存在于本机的服务，例如 `127.0.0.1:9222`。
 
-Install this extension together with `lwmacct.port-bridge-remote`. The local extension does not create remote sockets or remote ports by itself; it waits for the remote extension to create the control tunnel and then forwards raw TCP bytes to local targets.
+请将它与 `lwmacct.port-bridge-remote` 一起安装。Local 扩展本身不会创建远程 socket 或远程端口；它会等待 Remote 扩展创建控制 tunnel，然后把原始 TCP 字节转发到本机目标服务。
 
-## What It Does
+## 功能
 
-Port Bridge exposes a local-only port inside a VS Code remote workspace:
+Port Bridge 可以把一个仅本机可访问的端口暴露到 VS Code 远程工作区内：
 
 ```text
-local machine 127.0.0.1:<localPort>
+本机 127.0.0.1:<localPort>
   -> Port Bridge Local
   -> VS Code forwarded control tunnel
   -> Port Bridge Remote
-  -> remote 127.0.0.1:<remotePort>
-  -> remote Unix socket
+  -> 远程 127.0.0.1:<remotePort>
+  -> 远程 Unix socket
 ```
 
-Typical use cases:
+典型场景：
 
-- Use a local Chrome or Chromium CDP endpoint from a Dev Container or Remote SSH workspace.
-- Let a remote tool connect to a local development server without binding that server to the network.
-- Prefer a remote Unix socket for tools that can use one, while keeping an optional remote TCP listener for `host:port` clients.
+- 在 Dev Container 或 Remote SSH 工作区中访问本机 Chrome/Chromium CDP 端点。
+- 让远程工具连接本机开发服务，而不需要把本机服务暴露到网络上。
+- 远程工具支持 Unix socket 时，使用稳定的远程 socket 路径，同时保留可选的远程 TCP listener。
 
-## Required Companion Extension
+## 必需的配套扩展
 
-Port Bridge is split into two extensions because VS Code has separate local and remote extension hosts:
+Port Bridge 拆分为两个扩展，因为 VS Code 有独立的本机和远程 extension host：
 
 ```text
 lwmacct.port-bridge-local
-  runs locally in the UI extension host
-  connects to local 127.0.0.1:<localPort>
+  运行在本机 UI extension host
+  连接本机 127.0.0.1:<localPort>
 
 lwmacct.port-bridge-remote
-  runs in the remote workspace extension host
-  creates remote sockets and remote TCP listeners
+  运行在远程 workspace extension host
+  创建远程 socket 和远程 TCP listener
 ```
 
-Both extensions validate their runtime host during activation. If this extension is forced to run remotely, it stops with an error instead of silently forwarding from the wrong side.
+两个扩展都会在激活时检查运行位置。如果 Local 扩展被强制放到远程运行，它会报错并停止，避免从错误的一侧转发流量。
 
-## Configuration
+## 配置
 
-Mappings are configured on the remote side through `portBridge.mappings`. The local extension receives the active mapping list from the remote extension.
+映射配置在远程侧的 `portBridge.mappings` 中维护。Local 扩展会从 Remote 扩展接收当前生效的映射列表。
 
-Minimal remote workspace setting:
+最小远程工作区配置：
 
 ```json
 {
@@ -58,14 +58,14 @@ Minimal remote workspace setting:
 }
 ```
 
-That exposes local `127.0.0.1:9222` inside the remote workspace as:
+这会把本机 `127.0.0.1:9222` 暴露到远程工作区：
 
 ```text
 127.0.0.1:9222
 /tmp/vscode-port-bridge/port-9222.sock
 ```
 
-Named mapping:
+命名映射：
 
 ```json
 {
@@ -78,7 +78,7 @@ Named mapping:
 }
 ```
 
-Advanced mapping:
+高级映射：
 
 ```json
 {
@@ -95,28 +95,28 @@ Advanced mapping:
 }
 ```
 
-## Commands
+## 命令
 
-This extension contributes:
+此扩展贡献：
 
 ```text
-Port Bridge: Show Local Status
+Port Bridge: 显示本机状态
 ```
 
-The remote companion contributes start, stop, restart, reconnect, and status commands.
+远程配套扩展提供启动、停止、重启、重连和状态命令。
 
-## Security Notes
+## 安全说明
 
-Port Bridge moves local capabilities into a remote workspace. Treat forwarded endpoints as sensitive, especially Chrome CDP and other debugging ports.
+Port Bridge 会把本机能力带入远程工作区。请把被转发的端点视为敏感资源，尤其是 Chrome CDP 和其他调试端口。
 
-Recommended defaults:
+建议默认做法：
 
-- Keep local services bound to `127.0.0.1`.
-- Keep remote TCP listeners bound to `127.0.0.1`.
-- Prefer the generated Unix socket when the remote client supports it.
-- Do not expose CDP or other privileged debug protocols on `0.0.0.0`.
+- 让本机服务绑定到 `127.0.0.1`。
+- 让远程 TCP listener 绑定到 `127.0.0.1`。
+- 远程客户端支持 Unix socket 时优先使用生成的 socket。
+- 不要把 CDP 或其他高权限调试协议暴露到 `0.0.0.0`。
 
-## Links
+## 链接
 
 - Repository: https://github.com/lwmacct/260708-port-bridge
 - Issues: https://github.com/lwmacct/260708-port-bridge/issues

@@ -4,10 +4,10 @@
 
 ## 目标
 
-- `README.md` 使用英文，作为 GitHub 默认入口和 VS Code Marketplace 扩展详情入口。
-- 中文文档单独放在同目录的 `README.zh-CN.md`。
+- `README.md` 使用中文，作为 GitHub 默认入口和 VS Code Marketplace 扩展详情入口。
+- 英文文档作为副语言，单独放在同目录的 `README.en.md`。
 - VS Code 编辑器内可本地化的扩展 manifest 文本使用 `package.nls*.json`。
-- 不依赖 Marketplace 或 VS Code 扩展详情页自动选择中文 README。
+- 不依赖 Marketplace 或 VS Code 扩展详情页自动选择英文 README。
 
 ## 当前文件约定
 
@@ -15,16 +15,16 @@
 
 ```text
 README.md
-README.zh-CN.md
+README.en.md
 ```
 
 扩展目录：
 
 ```text
 extensions/port-bridge-local/README.md
-extensions/port-bridge-local/README.zh-CN.md
+extensions/port-bridge-local/README.en.md
 extensions/port-bridge-remote/README.md
-extensions/port-bridge-remote/README.zh-CN.md
+extensions/port-bridge-remote/README.en.md
 ```
 
 扩展 manifest 本地化文件：
@@ -62,12 +62,12 @@ VS Code Marketplace 的扩展详情内容来自扩展包中的 `README.md`。当
 
 因此本仓库采用明确规则：
 
-- `README.md` 始终是英文。
-- `README.zh-CN.md` 是中文版本。
-- 英文 README 顶部链接中文文档。
+- `README.md` 始终是中文。
+- `README.en.md` 是英文副语言版本。
 - 中文 README 顶部链接英文文档。
+- 英文 README 顶部链接中文文档。
 
-这保证 GitHub、Marketplace、VSIX 本地安装场景都有稳定的默认英文入口，同时中文用户可以通过显式链接进入中文说明。
+这保证 GitHub、Marketplace、VSIX 本地安装场景都有稳定的默认中文入口，同时英文用户可以通过显式链接进入英文说明。
 
 ## 打包验证要点
 
@@ -75,8 +75,8 @@ VS Code Marketplace 的扩展详情内容来自扩展包中的 `README.md`。当
 
 - `package.nls.json` 和 `package.nls.zh-cn.json` 被包含在 VSIX 中。
 - VSIX manifest 中短描述解析为默认英文，而不是保留 `%...%` 占位符。
-- `README.md` 为英文。
-- `README.zh-CN.md` 未被 `.vscodeignore` 排除。
+- `README.md` 为中文。
+- `README.en.md` 未被 `.vscodeignore` 排除。
 
 可用以下命令验证：
 
@@ -107,4 +107,4 @@ unzip -p artifacts/vsix/port-bridge-remote-check.vsix extension.vsixmanifest
 扩展展示可以分成两类处理：
 
 - 编辑器内短文本：用 `package.nls*.json` 随 VS Code 显示语言切换。
-- 长文档/详情页：`README.md` 用英文，中文放入 `README.zh-CN.md` 并显式链接。
+- 长文档/详情页：`README.md` 用中文，英文放入 `README.en.md` 并显式链接。
