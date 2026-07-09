@@ -8,8 +8,7 @@ interface ConnectControlPayload {
 
 interface OpenPayload {
   readonly name: string;
-  readonly localHost: string;
-  readonly localPort: number;
+  readonly local: Endpoint[];
 }
 
 interface Session {
@@ -17,10 +16,27 @@ interface Session {
   readonly mappingName: string;
 }
 
+type Endpoint =
+  | TcpEndpoint
+  | UnixEndpoint;
+
+interface TcpEndpoint {
+  readonly kind: 'tcp';
+  readonly host: string;
+  readonly port: number;
+}
+
+interface UnixEndpoint {
+  readonly kind: 'unix';
+  readonly path: string;
+}
+
 class LocalBridge {
   private readonly output = vscode.window.createOutputChannel('Port Bridge Local');
   private readonly status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
   private readonly sessions = new Map<number, Session>();
+  private readonly pendingData = new Map<number, Buffer[]>();
+  private readonly closedSessions = new Set<number>();
   private control: net.Socket | undefined;
 
   constructor() {
@@ -81,6 +97,8 @@ class LocalBridge {
         session.socket.destroy();
       }
       this.sessions.clear();
+      this.pendingData.clear();
+      this.closedSessions.clear();
       this.setStatus('waiting');
       this.log('Control channel closed.');
     });
@@ -89,10 +107,10 @@ class LocalBridge {
   private handleFrame(frame: Frame): void {
     switch (frame.type) {
       case FrameType.Open:
-        this.openSession(frame);
+        void this.openSession(frame);
         break;
       case FrameType.Data:
-        this.sessions.get(frame.sessionId)?.socket.write(frame.payload);
+        this.writeSessionData(frame.sessionId, frame.payload);
         break;
       case FrameType.Close:
       case FrameType.Error:
@@ -103,18 +121,35 @@ class LocalBridge {
     }
   }
 
-  private openSession(frame: Frame): void {
+  private async openSession(frame: Frame): Promise<void> {
     const payload = JSON.parse(frame.payload.toString('utf8')) as OpenPayload;
-    const socket = net.connect({
-      host: payload.localHost,
-      port: payload.localPort
-    });
+    this.closedSessions.delete(frame.sessionId);
+
+    let socket: net.Socket;
+    try {
+      socket = await this.connectLocal(payload.local);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.log(`${payload.name}: local connection error: ${message}`);
+      this.pendingData.delete(frame.sessionId);
+      this.send(FrameType.Error, frame.sessionId, Buffer.from(message, 'utf8'));
+      this.send(FrameType.Close, frame.sessionId);
+      return;
+    }
+
+    if (this.closedSessions.has(frame.sessionId)) {
+      this.closedSessions.delete(frame.sessionId);
+      this.pendingData.delete(frame.sessionId);
+      socket.destroy();
+      return;
+    }
 
     socket.setNoDelay(true);
     this.sessions.set(frame.sessionId, {
       socket,
       mappingName: payload.name
     });
+    this.flushPendingData(frame.sessionId, socket);
 
     socket.on('data', (chunk) => {
       this.send(FrameType.Data, frame.sessionId, typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
@@ -127,17 +162,103 @@ class LocalBridge {
 
     socket.on('close', () => {
       this.sessions.delete(frame.sessionId);
+      this.pendingData.delete(frame.sessionId);
+      this.closedSessions.delete(frame.sessionId);
       this.send(FrameType.Close, frame.sessionId);
     });
+  }
+
+  private writeSessionData(sessionId: number, payload: Buffer): void {
+    if (this.closedSessions.has(sessionId)) {
+      return;
+    }
+
+    const session = this.sessions.get(sessionId);
+    if (session) {
+      session.socket.write(payload);
+      return;
+    }
+
+    const pending = this.pendingData.get(sessionId) ?? [];
+    pending.push(payload);
+    this.pendingData.set(sessionId, pending);
+  }
+
+  private flushPendingData(sessionId: number, socket: net.Socket): void {
+    const pending = this.pendingData.get(sessionId);
+    if (!pending) {
+      return;
+    }
+
+    this.pendingData.delete(sessionId);
+    this.closedSessions.delete(sessionId);
+    for (const payload of pending) {
+      socket.write(payload);
+    }
+  }
+
+  private async connectLocal(endpoints: readonly Endpoint[]): Promise<net.Socket> {
+    if (!Array.isArray(endpoints) || endpoints.length === 0) {
+      throw new Error('No local endpoints were provided.');
+    }
+
+    const errors: string[] = [];
+
+    for (const endpoint of endpoints) {
+      try {
+        return await this.connectEndpoint(endpoint);
+      } catch (error) {
+        errors.push(`${this.formatEndpoint(endpoint)}: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    throw new Error(`All local endpoints failed: ${errors.join('; ')}`);
+  }
+
+  private connectEndpoint(endpoint: Endpoint): Promise<net.Socket> {
+    return new Promise((resolve, reject) => {
+      const socket = endpoint.kind === 'tcp'
+        ? net.connect({ host: endpoint.host, port: endpoint.port })
+        : net.connect({ path: endpoint.path });
+
+      const cleanup = (): void => {
+        socket.off('connect', onConnect);
+        socket.off('error', onError);
+      };
+      const onConnect = (): void => {
+        cleanup();
+        resolve(socket);
+      };
+      const onError = (error: Error): void => {
+        cleanup();
+        socket.destroy();
+        reject(error);
+      };
+
+      socket.once('connect', onConnect);
+      socket.once('error', onError);
+    });
+  }
+
+  private formatEndpoint(endpoint: Endpoint): string {
+    if (endpoint.kind === 'unix') {
+      return `unix:${endpoint.path}`;
+    }
+
+    return `${endpoint.host}:${endpoint.port}`;
   }
 
   private closeSession(sessionId: number): void {
     const session = this.sessions.get(sessionId);
     if (!session) {
+      this.pendingData.delete(sessionId);
+      this.closedSessions.add(sessionId);
       return;
     }
 
     this.sessions.delete(sessionId);
+    this.pendingData.delete(sessionId);
+    this.closedSessions.delete(sessionId);
     session.socket.destroy();
   }
 
@@ -154,6 +275,8 @@ class LocalBridge {
       session.socket.destroy();
     }
     this.sessions.clear();
+    this.pendingData.clear();
+    this.closedSessions.clear();
 
     if (this.control) {
       this.control.destroy();

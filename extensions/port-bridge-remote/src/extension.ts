@@ -6,11 +6,23 @@ import { encodeFrame, Frame, FrameReader, FrameType } from './frame';
 
 interface Mapping {
   readonly name: string;
-  readonly localHost: string;
-  readonly localPort: number;
-  readonly remoteSocket?: string;
-  readonly remoteHost: string;
-  readonly remotePort?: number;
+  readonly local: Endpoint[];
+  readonly remote: Endpoint[];
+}
+
+type Endpoint =
+  | TcpEndpoint
+  | UnixEndpoint;
+
+interface TcpEndpoint {
+  readonly kind: 'tcp';
+  readonly host: string;
+  readonly port: number;
+}
+
+interface UnixEndpoint {
+  readonly kind: 'unix';
+  readonly path: string;
 }
 
 interface Session {
@@ -19,7 +31,7 @@ interface Session {
 }
 
 const DEFAULT_HOST = '127.0.0.1';
-const DEFAULT_SOCKET_DIR = '/tmp/vscode-port-bridge';
+const ENDPOINT_PATTERN = 'host:port, tcp:host:port, tcp://host:port, or unix:/absolute/path.sock';
 
 class RemoteBridge {
   private readonly output = vscode.window.createOutputChannel('Port Bridge Remote');
@@ -129,12 +141,8 @@ class RemoteBridge {
     await this.startControlServer();
 
     for (const mapping of mappings) {
-      if (mapping.remoteSocket) {
-        this.listenUnixSocket(mapping, mapping.remoteSocket);
-      }
-
-      if (mapping.remotePort) {
-        this.listenTcp(mapping, mapping.remoteHost, mapping.remotePort);
+      for (const endpoint of mapping.remote) {
+        this.listenEndpoint(mapping, endpoint);
       }
     }
 
@@ -249,6 +257,15 @@ class RemoteBridge {
     });
   }
 
+  private listenEndpoint(mapping: Mapping, endpoint: Endpoint): void {
+    if (endpoint.kind === 'unix') {
+      this.listenUnixSocket(mapping, endpoint.path);
+      return;
+    }
+
+    this.listenTcp(mapping, endpoint.host, endpoint.port);
+  }
+
   private listenUnixSocket(mapping: Mapping, socketPath: string): void {
     fs.mkdirSync(path.dirname(socketPath), { recursive: true });
     fs.rmSync(socketPath, { force: true });
@@ -286,8 +303,7 @@ class RemoteBridge {
 
     this.send(FrameType.Open, sessionId, Buffer.from(JSON.stringify({
       name: mapping.name,
-      localHost: mapping.localHost,
-      localPort: mapping.localPort
+      local: mapping.local
     }), 'utf8'));
 
     socket.on('data', (chunk) => {
@@ -369,33 +385,20 @@ class RemoteBridge {
       return undefined;
     }
 
-    const port = this.isPort(item.port) ? item.port : undefined;
-    const localPort = this.isPort(item.localPort) ? item.localPort : port;
-    if (!localPort) {
+    const local = this.parseEndpointList(item.local);
+    const remote = this.parseEndpointList(item.remote);
+    if (local.length === 0 || remote.length === 0) {
       return undefined;
     }
 
     const name = typeof item.name === 'string' && item.name.trim()
       ? item.name.trim()
-      : `port-${localPort}`;
-    const localHost = typeof item.localHost === 'string' && item.localHost.trim()
-      ? item.localHost.trim()
-      : DEFAULT_HOST;
-    const remoteHost = typeof item.remoteHost === 'string' && item.remoteHost.trim()
-      ? item.remoteHost.trim()
-      : DEFAULT_HOST;
-    const remotePort = this.isPort(item.remotePort) ? item.remotePort : port ?? localPort;
-    const remoteSocket = typeof item.remoteSocket === 'string' && item.remoteSocket.trim()
-      ? item.remoteSocket.trim()
-      : this.defaultSocketPath(name);
+      : this.defaultMappingName(local[0], remote[0]);
 
     return {
       name,
-      localHost,
-      localPort,
-      remoteSocket,
-      remoteHost,
-      remotePort
+      local,
+      remote
     };
   }
 
@@ -416,12 +419,98 @@ class RemoteBridge {
     return true;
   }
 
-  private isPort(value: unknown): value is number {
-    return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 65535;
+  private parseEndpointList(raw: unknown): Endpoint[] {
+    const values = typeof raw === 'string'
+      ? [raw]
+      : Array.isArray(raw) ? raw : [];
+    const endpoints: Endpoint[] = [];
+
+    for (const value of values) {
+      if (typeof value !== 'string') {
+        return [];
+      }
+
+      const endpoint = this.parseEndpoint(value);
+      if (!endpoint) {
+        this.log(`Invalid endpoint "${value}". Expected ${ENDPOINT_PATTERN}.`);
+        return [];
+      }
+
+      endpoints.push(endpoint);
+    }
+
+    return endpoints;
   }
 
-  private defaultSocketPath(name: string): string {
-    return path.join(DEFAULT_SOCKET_DIR, `${name}.sock`);
+  private parseEndpoint(value: string): Endpoint | undefined {
+    const endpoint = value.trim();
+    if (!endpoint) {
+      return undefined;
+    }
+
+    if (endpoint.startsWith('unix:')) {
+      const socketPath = endpoint.slice('unix:'.length).trim();
+      if (!path.isAbsolute(socketPath)) {
+        return undefined;
+      }
+
+      return {
+        kind: 'unix',
+        path: socketPath
+      };
+    }
+
+    const tcpEndpoint = endpoint.startsWith('tcp://')
+      ? endpoint
+      : endpoint.startsWith('tcp:')
+      ? endpoint.slice('tcp:'.length)
+      : endpoint;
+    const parsed = this.parseTcpEndpoint(tcpEndpoint);
+    if (!parsed) {
+      return undefined;
+    }
+
+    return parsed;
+  }
+
+  private parseTcpEndpoint(value: string): TcpEndpoint | undefined {
+    const endpoint = value.trim();
+    if (!endpoint) {
+      return undefined;
+    }
+
+    try {
+      const url = endpoint.startsWith('tcp://')
+        ? new URL(endpoint)
+        : new URL(`tcp://${endpoint}`);
+      const port = Number(url.port);
+      if (url.protocol !== 'tcp:' || !url.hostname || !this.isPort(port)) {
+        return undefined;
+      }
+
+      return {
+        kind: 'tcp',
+        host: url.hostname,
+        port
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  private isPort(value: number): boolean {
+    return Number.isInteger(value) && value >= 1 && value <= 65535;
+  }
+
+  private defaultMappingName(local: Endpoint, remote: Endpoint): string {
+    return `${this.endpointName(local)}-to-${this.endpointName(remote)}`;
+  }
+
+  private endpointName(endpoint: Endpoint): string {
+    const value = endpoint.kind === 'tcp'
+      ? `${endpoint.host}-${endpoint.port}`
+      : path.basename(endpoint.path, path.extname(endpoint.path));
+    return value.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '') || endpoint.kind;
   }
 
   private setStatus(state: string): void {

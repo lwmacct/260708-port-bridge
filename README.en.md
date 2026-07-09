@@ -7,9 +7,9 @@ Port Bridge exposes local `127.0.0.1:<port>` endpoints inside VS Code remote wor
 It solves the reverse direction of regular VS Code port forwarding:
 
 ```text
-local machine 127.0.0.1:<localPort>
+local machine <local-endpoint>
   -> VS Code Remote tunnel
-  -> remote workspace 127.0.0.1:<remotePort> or /tmp/vscode-port-bridge/<name>.sock
+  -> remote workspace <remote-endpoint>
 ```
 
 A typical use case is letting Playwright, Codex MCP, or other tools inside a remote container access the CDP port of a browser running on your local machine, without exposing that debug port to the network.
@@ -27,7 +27,7 @@ The extensions run in different extension hosts:
 Port Bridge Local
   extensionKind: ["ui"]
   runs in the local VS Code UI side
-  connects to local 127.0.0.1:<localPort>
+  connects to local <local-endpoint>
 
 Port Bridge Remote
   extensionKind: ["workspace"]
@@ -46,7 +46,11 @@ Configure the local port to expose in the VS Code remote window `settings.json`:
   "portBridge.autoStart": true,
   "portBridge.mappings": [
     {
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": [
+        "127.0.0.1:9222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -56,7 +60,7 @@ This exposes local `127.0.0.1:9222` inside the remote workspace and creates:
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/port-9222.sock
+/tmp/vscode-port-bridge/chrome-cdp.sock
 ```
 
 If local `9222` is a Chrome CDP port, verify it from the remote terminal:
@@ -68,7 +72,7 @@ curl http://127.0.0.1:9222/json/version
 Or verify through the Unix socket:
 
 ```bash
-curl --unix-socket /tmp/vscode-port-bridge/port-9222.sock \
+curl --unix-socket /tmp/vscode-port-bridge/chrome-cdp.sock \
   http://localhost/json/version
 ```
 
@@ -100,7 +104,11 @@ Configure the remote workspace:
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": [
+        "127.0.0.1:9222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -157,7 +165,7 @@ Starts configured mappings automatically after the remote window starts. Disable
 
 Default: `[]`
 
-Configures local-to-remote port mappings. Each mapping is an object, so you can temporarily disable a mapping with `enabled` without deleting it:
+Configures local-to-remote endpoint mappings. Each mapping is an object, so you can temporarily disable a mapping with `enabled` without deleting it:
 
 ```json
 {
@@ -165,31 +173,44 @@ Configures local-to-remote port mappings. Each mapping is an object, so you can 
     {
       "name": "chrome-cdp",
       "enabled": false,
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": "127.0.0.1:9222"
     },
     {
       "name": "web-dev",
-      "port": 3000
+      "local": "127.0.0.1:3000",
+      "remote": "127.0.0.1:3000"
     }
   ]
 }
 ```
 
-The minimal mapping object is equivalent to:
+Both `local` and `remote` accept a string or an array of strings:
 
 ```json
 {
-  "enabled": true,
-  "name": "port-9222",
-  "localHost": "127.0.0.1",
-  "localPort": 9222,
-  "remoteHost": "127.0.0.1",
-  "remotePort": 9222,
-  "remoteSocket": "/tmp/vscode-port-bridge/port-9222.sock"
+  "name": "browser",
+  "local": [
+    "unix:/tmp/chrome-cdp.sock",
+    "127.0.0.1:9222"
+  ],
+  "remote": [
+    "127.0.0.1:9222",
+    "unix:/tmp/vscode-port-bridge/browser.sock"
+  ]
 }
 ```
 
-Object mappings can override the name, host, ports, and socket path:
+The `local` array is an ordered fallback list, not multiple simultaneous local connections. The `remote` array creates multiple remote entrypoints.
+
+Endpoint formats:
+
+- `127.0.0.1:9222`: TCP endpoint shorthand.
+- `tcp:127.0.0.1:9222`: explicit TCP endpoint.
+- `tcp://127.0.0.1:9222`: TCP URI form.
+- `unix:/tmp/chrome-cdp.sock`: Unix socket with an absolute path.
+
+Advanced mappings can combine local socket fallback with multiple remote entrypoints:
 
 ```json
 {
@@ -197,11 +218,14 @@ Object mappings can override the name, host, ports, and socket path:
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "localHost": "127.0.0.1",
-      "localPort": 9222,
-      "remoteHost": "127.0.0.1",
-      "remotePort": 39222,
-      "remoteSocket": "/tmp/vscode-port-bridge/chrome-cdp.sock"
+      "local": [
+        "unix:/tmp/chrome-cdp.sock",
+        "127.0.0.1:9222"
+      ],
+      "remote": [
+        "127.0.0.1:39222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -210,15 +234,11 @@ Object mappings can override the name, host, ports, and socket path:
 Fields:
 
 - `enabled`: whether this mapping is active; defaults to `true`. Set it to `false` to keep but skip the mapping.
-- `name`: mapping name; defaults to `port-<localPort>`.
-- `port`: shorthand used for `localPort` and the default `remotePort`.
-- `localHost`: local target host; defaults to `127.0.0.1`.
-- `localPort`: local target port; falls back to `port`.
-- `remoteHost`: remote TCP listen address; defaults to `127.0.0.1`.
-- `remotePort`: remote TCP listen port; falls back to `port`, then `localPort`.
-- `remoteSocket`: remote Unix socket path; defaults to `/tmp/vscode-port-bridge/<name>.sock`.
+- `name`: mapping name; defaults to a name generated from the first `local` and `remote` endpoints.
+- `local`: local target endpoint, or an ordered array of fallback endpoints.
+- `remote`: remote exposed endpoint, or an array of remote entrypoints to create.
 
-By default Port Bridge creates both a remote TCP listener and a remote Unix socket. The Unix socket exists only in the remote filesystem and has a smaller exposure surface; the remote TCP port is useful for tools that only support `host:port`.
+Unix sockets exist only in the corresponding machine's filesystem and have a smaller exposure surface than TCP ports; remote TCP ports are useful for tools that only support `host:port`.
 
 ### `portBridge.controlReconnectDelayMs`
 
@@ -250,11 +270,11 @@ Data path:
 
 ```text
 remote process
-  -> remote 127.0.0.1:<remotePort> or /tmp/vscode-port-bridge/<name>.sock
+  -> remote <remote-endpoint>
   -> port-bridge-remote
   -> VS Code forwarded control tunnel
   -> port-bridge-local
-  -> local machine 127.0.0.1:<localPort>
+  -> local machine <local-endpoint>
 ```
 
 `port-bridge-remote` reads `portBridge.mappings`, creates remote TCP listeners and Unix sockets, starts an internal control server, and creates a VS Code tunnel through `vscode.env.asExternalUri()`.

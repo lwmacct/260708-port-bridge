@@ -7,9 +7,9 @@ Port Bridge 把本机 `127.0.0.1:<port>` 暴露到 VS Code 远程工作区里，
 它解决的是 VS Code 常规端口转发的反方向：
 
 ```text
-本机 127.0.0.1:<localPort>
+本机 <local-endpoint>
   -> VS Code Remote tunnel
-  -> 远程工作区 127.0.0.1:<remotePort> 或 /tmp/vscode-port-bridge/<name>.sock
+  -> 远程工作区 <remote-endpoint>
 ```
 
 典型用途是让远程容器里的 Playwright、Codex MCP 或其他工具访问本机浏览器的 CDP 端口，同时不需要把本机调试端口开放到网络。
@@ -27,7 +27,7 @@ Port Bridge 由两个 companion extensions 组成，必须同时安装：
 Port Bridge Local
   extensionKind: ["ui"]
   运行在本机 VS Code UI 侧
-  负责连接本机 127.0.0.1:<localPort>
+  负责连接本机 <local-endpoint>
 
 Port Bridge Remote
   extensionKind: ["workspace"]
@@ -46,7 +46,11 @@ Port Bridge Remote
   "portBridge.autoStart": true,
   "portBridge.mappings": [
     {
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": [
+        "127.0.0.1:9222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -56,7 +60,7 @@ Port Bridge Remote
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/port-9222.sock
+/tmp/vscode-port-bridge/chrome-cdp.sock
 ```
 
 如果本机 `9222` 是 Chrome CDP 端口，可以在远程终端里验证：
@@ -68,7 +72,7 @@ curl http://127.0.0.1:9222/json/version
 或通过 Unix socket 验证：
 
 ```bash
-curl --unix-socket /tmp/vscode-port-bridge/port-9222.sock \
+curl --unix-socket /tmp/vscode-port-bridge/chrome-cdp.sock \
   http://localhost/json/version
 ```
 
@@ -100,7 +104,11 @@ macOS 可以使用：
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": [
+        "127.0.0.1:9222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -157,7 +165,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 
 默认值：`[]`
 
-配置本机到远程的端口映射。每个映射都是对象，因此可以保留配置并通过 `enabled` 临时禁用：
+配置本机到远程的端点映射。每个映射都是对象，因此可以保留配置并通过 `enabled` 临时禁用：
 
 ```json
 {
@@ -165,31 +173,44 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
     {
       "name": "chrome-cdp",
       "enabled": false,
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": "127.0.0.1:9222"
     },
     {
       "name": "web-dev",
-      "port": 3000
+      "local": "127.0.0.1:3000",
+      "remote": "127.0.0.1:3000"
     }
   ]
 }
 ```
 
-最小映射对象等价于：
+`local` 和 `remote` 都支持字符串或字符串数组：
 
 ```json
 {
-  "enabled": true,
-  "name": "port-9222",
-  "localHost": "127.0.0.1",
-  "localPort": 9222,
-  "remoteHost": "127.0.0.1",
-  "remotePort": 9222,
-  "remoteSocket": "/tmp/vscode-port-bridge/port-9222.sock"
+  "name": "browser",
+  "local": [
+    "unix:/tmp/chrome-cdp.sock",
+    "127.0.0.1:9222"
+  ],
+  "remote": [
+    "127.0.0.1:9222",
+    "unix:/tmp/vscode-port-bridge/browser.sock"
+  ]
 }
 ```
 
-对象写法支持覆盖名称、host、端口和 socket 路径：
+`local` 数组表示按顺序尝试的 fallback 目标，不表示同时连接多个本机目标。`remote` 数组表示同时创建多个远程入口。
+
+端点格式：
+
+- `127.0.0.1:9222`: TCP 端点的短写。
+- `tcp:127.0.0.1:9222`: TCP 端点的显式写法。
+- `tcp://127.0.0.1:9222`: TCP URI 写法。
+- `unix:/tmp/chrome-cdp.sock`: Unix socket，路径必须是绝对路径。
+
+高级映射可以同时使用本机 socket fallback 和多个远程入口：
 
 ```json
 {
@@ -197,11 +218,14 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "localHost": "127.0.0.1",
-      "localPort": 9222,
-      "remoteHost": "127.0.0.1",
-      "remotePort": 39222,
-      "remoteSocket": "/tmp/vscode-port-bridge/chrome-cdp.sock"
+      "local": [
+        "unix:/tmp/chrome-cdp.sock",
+        "127.0.0.1:9222"
+      ],
+      "remote": [
+        "127.0.0.1:39222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -210,15 +234,11 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 字段说明：
 
 - `enabled`: 是否启用此映射，默认 `true`。设为 `false` 时会跳过但保留配置。
-- `name`: 映射名称，默认 `port-<localPort>`。
-- `port`: 同时作为 `localPort` 和默认 `remotePort`。
-- `localHost`: 本机侧要连接的 host，默认 `127.0.0.1`。
-- `localPort`: 本机侧要连接的端口；未配置时使用 `port`。
-- `remoteHost`: 远程 TCP 监听地址，默认 `127.0.0.1`。
-- `remotePort`: 远程 TCP 监听端口；未配置时使用 `port`，再 fallback 到 `localPort`。
-- `remoteSocket`: 远程 Unix socket 路径，默认 `/tmp/vscode-port-bridge/<name>.sock`。
+- `name`: 映射名称；未配置时基于第一个 `local` 和第一个 `remote` 生成。
+- `local`: 本机目标端点，或按顺序尝试的 fallback 端点数组。
+- `remote`: 远程暴露端点，或要同时创建的远程入口数组。
 
-默认会同时创建远程 TCP listener 和远程 Unix socket。Unix socket 只存在于远程文件系统中，暴露面比 TCP 端口更小；远程 TCP 端口适合只支持 `host:port` 的工具。
+Unix socket 只存在于对应机器的文件系统中，暴露面比 TCP 端口更小；远程 TCP 端口适合只支持 `host:port` 的工具。
 
 ### `portBridge.controlReconnectDelayMs`
 
@@ -250,11 +270,11 @@ Port Bridge: Show Local Status
 
 ```text
 远程进程
-  -> 远程 127.0.0.1:<remotePort> 或 /tmp/vscode-port-bridge/<name>.sock
+  -> 远程 <remote-endpoint>
   -> port-bridge-remote
   -> VS Code forwarded control tunnel
   -> port-bridge-local
-  -> 本机 127.0.0.1:<localPort>
+  -> 本机 <local-endpoint>
 ```
 
 `port-bridge-remote` 负责读取 `portBridge.mappings`、创建远程 TCP listener 和 Unix socket、启动内部 control server，并通过 `vscode.env.asExternalUri()` 创建 VS Code tunnel。

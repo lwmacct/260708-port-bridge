@@ -6,14 +6,10 @@
   "commands.reconnectControl.title": "Port Bridge: 重连控制通道",
   "commands.showRemoteStatus.title": "Port Bridge: 显示远程状态",
   "configuration.autoStart.description": "在远程窗口中自动启动已配置的端口桥接。",
-  "configuration.mappings.description": "本机到远程的端口映射。每个映射都是对象，便于命名、禁用和定制配置而不必删除条目。",
+  "configuration.mappings.description": "本机到远程的端点映射。每个映射把一个或多个远程入口连接到一个或多个本机 fallback 端点。",
   "configuration.mapping.enabled.description": "此映射是否启用。默认值为 true。",
-  "configuration.mapping.name.description": "稳定的映射名称。默认值为 port-<localPort>。",
-  "configuration.mapping.port.description": "同时用于 localPort 和 remotePort 的端口，除非显式设置了对应字段。",
-  "configuration.mapping.localHost.description": "要连接的本机主机名或地址。",
-  "configuration.mapping.localPort.description": "要连接的本机端口。",
-  "configuration.mapping.remoteSocket.description": "要在远程工作区创建的 Unix socket 路径。默认值为 /tmp/vscode-port-bridge/<name>.sock。",
-  "configuration.mapping.remoteHost.description": "远程 TCP listener 绑定的主机名或网络接口。",
-  "configuration.mapping.remotePort.description": "远程工作区中监听的 TCP 端口。",
+  "configuration.mapping.name.description": "稳定的映射名称。未配置时基于第一个本机端点和远程端点生成。",
+  "configuration.mapping.local.description": "本机目标端点或按顺序尝试的 fallback 端点。支持 host:port、tcp:host:port、tcp://host:port 或 unix:/absolute/path.sock。",
+  "configuration.mapping.remote.description": "要创建的远程暴露端点。支持 host:port、tcp:host:port、tcp://host:port 或 unix:/absolute/path.sock。",
   "configuration.controlReconnectDelayMs.description": "内部控制 tunnel 关闭后，重新创建前等待的延迟。"
 }

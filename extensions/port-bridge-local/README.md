@@ -15,12 +15,11 @@ Port Bridge Local 是 Port Bridge 的本机侧扩展。它运行在 VS Code 的 
 Port Bridge 可以把一个仅本机可访问的端口暴露到 VS Code 远程工作区内：
 
 ```text
-本机 127.0.0.1:<localPort>
+本机 <local-endpoint>
   -> Port Bridge Local
   -> VS Code forwarded control tunnel
   -> Port Bridge Remote
-  -> 远程 127.0.0.1:<remotePort>
-  -> 远程 Unix socket
+  -> 远程 <remote-endpoint>
 ```
 
 典型场景：
@@ -36,7 +35,7 @@ Port Bridge 拆分为两个扩展，因为 VS Code 有独立的本机和远程 e
 ```text
 lwmacct.port-bridge-local
   运行在本机 UI extension host
-  连接本机 127.0.0.1:<localPort>
+  连接本机 <local-endpoint>
 
 lwmacct.port-bridge-remote
   运行在远程 workspace extension host
@@ -56,7 +55,8 @@ lwmacct.port-bridge-remote
   "portBridge.autoStart": true,
   "portBridge.mappings": [
     {
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": "127.0.0.1:9222"
     }
   ]
 }
@@ -66,7 +66,6 @@ lwmacct.port-bridge-remote
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/port-9222.sock
 ```
 
 命名映射：
@@ -77,7 +76,11 @@ lwmacct.port-bridge-remote
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": [
+        "127.0.0.1:9222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -91,11 +94,14 @@ lwmacct.port-bridge-remote
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "localHost": "127.0.0.1",
-      "localPort": 9222,
-      "remoteHost": "127.0.0.1",
-      "remotePort": 39222,
-      "remoteSocket": "/tmp/vscode-port-bridge/chrome-cdp.sock"
+      "local": [
+        "unix:/tmp/chrome-cdp.sock",
+        "127.0.0.1:9222"
+      ],
+      "remote": [
+        "127.0.0.1:39222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }

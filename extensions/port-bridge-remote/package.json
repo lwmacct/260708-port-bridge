@@ -90,17 +90,9 @@
           "description": "%configuration.mappings.description%",
           "items": {
             "type": "object",
-            "anyOf": [
-              {
-                "required": [
-                  "port"
-                ]
-              },
-              {
-                "required": [
-                  "localPort"
-                ]
-              }
+            "required": [
+              "local",
+              "remote"
             ],
             "additionalProperties": false,
             "properties": {
@@ -113,37 +105,35 @@
                 "type": "string",
                 "description": "%configuration.mapping.name.description%"
               },
-              "port": {
-                "type": "number",
-                "minimum": 1,
-                "maximum": 65535,
-                "description": "%configuration.mapping.port.description%"
+              "local": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "description": "%configuration.mapping.local.description%"
               },
-              "localHost": {
-                "type": "string",
-                "default": "127.0.0.1",
-                "description": "%configuration.mapping.localHost.description%"
-              },
-              "localPort": {
-                "type": "number",
-                "minimum": 1,
-                "maximum": 65535,
-                "description": "%configuration.mapping.localPort.description%"
-              },
-              "remoteSocket": {
-                "type": "string",
-                "description": "%configuration.mapping.remoteSocket.description%"
-              },
-              "remoteHost": {
-                "type": "string",
-                "default": "127.0.0.1",
-                "description": "%configuration.mapping.remoteHost.description%"
-              },
-              "remotePort": {
-                "type": "number",
-                "minimum": 1,
-                "maximum": 65535,
-                "description": "%configuration.mapping.remotePort.description%"
+              "remote": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "description": "%configuration.mapping.remote.description%"
               }
             }
           }

@@ -16,12 +16,11 @@ Port Bridge exposes a local-only port inside a VS Code remote workspace:
 
 ```text
 remote process
-  -> remote 127.0.0.1:<remotePort>
-  -> remote Unix socket
+  -> remote <remote-endpoint>
   -> Port Bridge Remote
   -> VS Code forwarded control tunnel
   -> Port Bridge Local
-  -> local machine 127.0.0.1:<localPort>
+  -> local machine <local-endpoint>
 ```
 
 Typical use cases:
@@ -39,7 +38,7 @@ Port Bridge is split into two extensions because VS Code has separate local and 
 ```text
 lwmacct.port-bridge-local
   runs locally in the UI extension host
-  connects to local 127.0.0.1:<localPort>
+  connects to local <local-endpoint>
 
 lwmacct.port-bridge-remote
   runs in the remote workspace extension host
@@ -57,7 +56,8 @@ Minimal remote workspace setting:
   "portBridge.autoStart": true,
   "portBridge.mappings": [
     {
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": "127.0.0.1:9222"
     }
   ]
 }
@@ -67,7 +67,6 @@ That exposes local `127.0.0.1:9222` inside the remote workspace as:
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/port-9222.sock
 ```
 
 Named mapping:
@@ -78,7 +77,11 @@ Named mapping:
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": [
+        "127.0.0.1:9222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -92,11 +95,14 @@ Advanced mapping:
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "localHost": "127.0.0.1",
-      "localPort": 9222,
-      "remoteHost": "127.0.0.1",
-      "remotePort": 39222,
-      "remoteSocket": "/tmp/vscode-port-bridge/chrome-cdp.sock"
+      "local": [
+        "unix:/tmp/chrome-cdp.sock",
+        "127.0.0.1:9222"
+      ],
+      "remote": [
+        "127.0.0.1:39222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
@@ -105,13 +111,11 @@ Advanced mapping:
 Mapping fields:
 
 - `enabled`: whether this mapping is active; defaults to `true`. Set it to `false` to keep but skip the mapping.
-- `name`: stable mapping name; defaults to `port-<localPort>`.
-- `port`: shared shorthand for `localPort` and default `remotePort`.
-- `localHost`: local target host; defaults to `127.0.0.1`.
-- `localPort`: local target port.
-- `remoteHost`: remote TCP listener host; defaults to `127.0.0.1`.
-- `remotePort`: remote TCP listener port.
-- `remoteSocket`: remote Unix socket path; defaults to `/tmp/vscode-port-bridge/<name>.sock`.
+- `name`: stable mapping name; defaults to a name generated from the first local and remote endpoints.
+- `local`: local target endpoint, or an ordered array of fallback endpoints.
+- `remote`: remote entrypoint to create, or an array of remote entrypoints.
+
+Endpoint formats support `127.0.0.1:9222`, `tcp:127.0.0.1:9222`, `tcp://127.0.0.1:9222`, and `unix:/tmp/name.sock`.
 
 ## Chrome CDP Example
 
@@ -132,7 +136,11 @@ Configure the remote workspace:
     {
       "name": "chrome-cdp",
       "enabled": true,
-      "port": 9222
+      "local": "127.0.0.1:9222",
+      "remote": [
+        "127.0.0.1:9222",
+        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+      ]
     }
   ]
 }
