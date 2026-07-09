@@ -2,7 +2,7 @@
   "name": "portrelay-local",
   "displayName": "PortRelay Local",
   "description": "%extension.description%",
-  "version": "0.11.260709",
+  "version": "0.13.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "repository": {
