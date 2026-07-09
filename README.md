@@ -375,6 +375,32 @@ artifacts/vsix/port-bridge-local-<version>.vsix
 artifacts/vsix/port-bridge-remote-<version>.vsix
 ```
 
+## 发布
+
+VS Code Marketplace 官方发布文档：
+
+https://code.visualstudio.com/api/working-with-extensions/publishing-extension
+
+本仓库使用 GitHub Actions 的 `publish` workflow 发布：
+
+- 创建 `v<version>` tag，且 tag 版本必须和根目录及两个扩展的 `package.json` 版本一致。
+- `release.yml` 会把 tag 转发给 `publish.yml`。
+- `publish.yml` 会校验 tag、执行类型检查、打包 VSIX、发布 GitHub Release，然后用 Microsoft Entra ID 发布到 Visual Studio Marketplace。
+
+Marketplace 发布使用官方推荐的 secure automated publishing：
+
+- GitHub Actions environment: `marketplace`
+- optional environment variables:
+  - `AZURE_CLIENT_ID`
+  - `AZURE_TENANT_ID`
+  - `AZURE_SUBSCRIPTION_ID`
+- workflow permission: `id-token: write`
+- 发布命令: `vsce publish --azure-credential`
+
+如果上面的 Azure variables 未配置，workflow 会跳过 Visual Studio Marketplace 发布，只发布 GitHub Release。
+
+需要先在 Azure 中给发布身份配置 federated credential，并把该身份加入 Visual Studio Marketplace publisher `lwmacct`，角色至少为 `Contributor`。
+
 ## 关键 VS Code API
 
 - `extensionKind: ["ui"]`: local 扩展运行在本机 UI extension host。

@@ -2,7 +2,7 @@
   "name": "port-bridge-remote",
   "displayName": "Port Bridge Remote",
   "description": "Remote-side endpoint for Port Bridge.",
-  "version": "0.9.260709",
+  "version": "0.10.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "engines": {

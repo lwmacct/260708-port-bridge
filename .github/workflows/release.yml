@@ -31,6 +31,6 @@ jobs:
         uses: lwmacct/260707-action-workflow-dispatch@main
         with:
           workflow: publish.yml
-          source-tag: ${{ inputs.tag }}
+          source-tag: ${{ github.ref_name || inputs.tag }}
           source-sha: ${{ inputs.sha }}
           tag-pattern: "v*"

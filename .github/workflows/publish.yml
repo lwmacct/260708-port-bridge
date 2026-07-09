@@ -23,8 +23,10 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: marketplace
     permissions:
       contents: write
+      id-token: write
     steps:
       - name: Checkout release commit
         uses: actions/checkout@v7.0.0
@@ -48,6 +50,14 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
+      - name: Azure login
+        if: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' }}
+        uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
       - name: Install dependencies
         env:
           PNPM_CONFIG_MINIMUM_RELEASE_AGE: "0"
@@ -69,3 +79,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ inputs.source-tag }}
         run: scripts/publish-github-release.sh
+
+      - name: Publish Visual Studio Marketplace
+        if: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' }}
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+        run: scripts/publish-marketplace.sh
+
+      - name: Skip Visual Studio Marketplace publish
+        if: ${{ vars.AZURE_CLIENT_ID == '' || vars.AZURE_TENANT_ID == '' || vars.AZURE_SUBSCRIPTION_ID == '' }}
+        run: |
+          {
+            echo "### Marketplace"
+            echo
+            echo "Skipped Visual Studio Marketplace publish because Azure publishing variables are not configured."
+          } >> "${GITHUB_STEP_SUMMARY}"
