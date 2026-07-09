@@ -1,0 +1,4 @@
+{
+  "extension.description": "Port Bridge 的本机侧端点。",
+  "commands.showLocalStatus.title": "Port Bridge: 显示本机状态"
+}

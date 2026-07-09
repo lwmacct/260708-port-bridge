@@ -1,5 +1,7 @@
 # Port Bridge Remote
 
+[Chinese documentation](https://github.com/lwmacct/260708-port-bridge/blob/main/extensions/port-bridge-remote/README.zh-CN.md)
+
 [![CI](https://img.shields.io/github/actions/workflow/status/lwmacct/260708-port-bridge/ci.yml?branch=main&label=ci)](https://github.com/lwmacct/260708-port-bridge/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/lwmacct/260708-port-bridge?label=release)](https://github.com/lwmacct/260708-port-bridge/releases)
 [![License](https://img.shields.io/github/license/lwmacct/260708-port-bridge)](https://github.com/lwmacct/260708-port-bridge/blob/main/LICENSE)

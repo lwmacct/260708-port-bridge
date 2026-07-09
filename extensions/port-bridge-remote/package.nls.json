@@ -1,0 +1,19 @@
+{
+  "extension.description": "Remote-side endpoint for Port Bridge.",
+  "commands.start.title": "Port Bridge: Start Remote",
+  "commands.stop.title": "Port Bridge: Stop Remote",
+  "commands.restart.title": "Port Bridge: Restart Remote",
+  "commands.reconnectControl.title": "Port Bridge: Reconnect Control Channel",
+  "commands.showRemoteStatus.title": "Port Bridge: Show Remote Status",
+  "configuration.autoStart.description": "Start configured port bridges automatically in remote windows.",
+  "configuration.mappings.description": "Local-to-remote port mappings. Use a number for the common case, or an object for advanced overrides.",
+  "configuration.mapping.number.description": "Port to expose with default local/remote hosts and socket path.",
+  "configuration.mapping.name.description": "Stable mapping name. Defaults to port-<localPort>.",
+  "configuration.mapping.port.description": "Port to use for both localPort and remotePort unless they are explicitly set.",
+  "configuration.mapping.localHost.description": "Host on the local machine to connect to.",
+  "configuration.mapping.localPort.description": "Port on the local machine to connect to.",
+  "configuration.mapping.remoteSocket.description": "Unix socket path to create in the remote workspace. Defaults to /tmp/vscode-port-bridge/<name>.sock.",
+  "configuration.mapping.remoteHost.description": "Remote host/interface for the TCP listener.",
+  "configuration.mapping.remotePort.description": "TCP port to listen on in the remote workspace.",
+  "configuration.controlReconnectDelayMs.description": "Delay before recreating the internal control tunnel after it is closed."
+}

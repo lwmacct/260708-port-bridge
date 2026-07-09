@@ -1,7 +1,7 @@
 {
   "name": "port-bridge-remote",
   "displayName": "Port Bridge Remote",
-  "description": "Remote-side endpoint for Port Bridge.",
+  "description": "%extension.description%",
   "version": "0.11.260709",
   "publisher": "lwmacct",
   "license": "MIT",
@@ -57,23 +57,23 @@
     "commands": [
       {
         "command": "portBridge.remote.start",
-        "title": "Port Bridge: Start Remote"
+        "title": "%commands.start.title%"
       },
       {
         "command": "portBridge.remote.stop",
-        "title": "Port Bridge: Stop Remote"
+        "title": "%commands.stop.title%"
       },
       {
         "command": "portBridge.remote.restart",
-        "title": "Port Bridge: Restart Remote"
+        "title": "%commands.restart.title%"
       },
       {
         "command": "portBridge.remote.reconnectControl",
-        "title": "Port Bridge: Reconnect Control Channel"
+        "title": "%commands.reconnectControl.title%"
       },
       {
         "command": "portBridge.remote.showStatus",
-        "title": "Port Bridge: Show Remote Status"
+        "title": "%commands.showRemoteStatus.title%"
       }
     ],
     "configuration": {
@@ -82,19 +82,19 @@
         "portBridge.autoStart": {
           "type": "boolean",
           "default": true,
-          "description": "Start configured port bridges automatically in remote windows."
+          "description": "%configuration.autoStart.description%"
         },
         "portBridge.mappings": {
           "type": "array",
           "default": [],
-          "description": "Local-to-remote port mappings. Use a number for the common case, or an object for advanced overrides.",
+          "description": "%configuration.mappings.description%",
           "items": {
             "anyOf": [
               {
                 "type": "number",
                 "minimum": 1,
                 "maximum": 65535,
-                "description": "Port to expose with default local/remote hosts and socket path."
+                "description": "%configuration.mapping.number.description%"
               },
               {
                 "type": "object",
@@ -113,39 +113,39 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "description": "Stable mapping name. Defaults to port-<localPort>."
+                    "description": "%configuration.mapping.name.description%"
                   },
                   "port": {
                     "type": "number",
                     "minimum": 1,
                     "maximum": 65535,
-                    "description": "Port to use for both localPort and remotePort unless they are explicitly set."
+                    "description": "%configuration.mapping.port.description%"
                   },
                   "localHost": {
                     "type": "string",
                     "default": "127.0.0.1",
-                    "description": "Host on the local machine to connect to."
+                    "description": "%configuration.mapping.localHost.description%"
                   },
                   "localPort": {
                     "type": "number",
                     "minimum": 1,
                     "maximum": 65535,
-                    "description": "Port on the local machine to connect to."
+                    "description": "%configuration.mapping.localPort.description%"
                   },
                   "remoteSocket": {
                     "type": "string",
-                    "description": "Unix socket path to create in the remote workspace. Defaults to /tmp/vscode-port-bridge/<name>.sock."
+                    "description": "%configuration.mapping.remoteSocket.description%"
                   },
                   "remoteHost": {
                     "type": "string",
                     "default": "127.0.0.1",
-                    "description": "Remote host/interface for the TCP listener."
+                    "description": "%configuration.mapping.remoteHost.description%"
                   },
                   "remotePort": {
                     "type": "number",
                     "minimum": 1,
                     "maximum": 65535,
-                    "description": "TCP port to listen on in the remote workspace."
+                    "description": "%configuration.mapping.remotePort.description%"
                   }
                 }
               }
@@ -157,7 +157,7 @@
           "default": 1000,
           "minimum": 100,
           "maximum": 30000,
-          "description": "Delay before recreating the internal control tunnel after it is closed."
+          "description": "%configuration.controlReconnectDelayMs.description%"
         }
       }
     }

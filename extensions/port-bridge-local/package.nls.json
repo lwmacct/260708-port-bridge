@@ -1,0 +1,4 @@
+{
+  "extension.description": "Local-side endpoint for Port Bridge.",
+  "commands.showLocalStatus.title": "Port Bridge: Show Local Status"
+}

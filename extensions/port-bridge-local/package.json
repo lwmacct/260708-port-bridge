@@ -1,7 +1,7 @@
 {
   "name": "port-bridge-local",
   "displayName": "Port Bridge Local",
-  "description": "Local-side endpoint for Port Bridge.",
+  "description": "%extension.description%",
   "version": "0.11.260709",
   "publisher": "lwmacct",
   "license": "MIT",
@@ -58,7 +58,7 @@
     "commands": [
       {
         "command": "portBridge.local.showStatus",
-        "title": "Port Bridge: Show Local Status"
+        "title": "%commands.showLocalStatus.title%"
       }
     ]
   },

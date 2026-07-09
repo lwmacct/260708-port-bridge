@@ -1,43 +1,45 @@
 # Port Bridge
 
-Port Bridge 把本机 `127.0.0.1:<port>` 暴露到 VS Code 远程工作区里，适用于 Dev Containers、Remote SSH 等场景。
+[Chinese documentation](README.zh-CN.md)
 
-它解决的是 VS Code 常规端口转发的反方向：
+Port Bridge exposes local `127.0.0.1:<port>` endpoints inside VS Code remote workspaces, including Dev Containers and Remote SSH.
+
+It solves the reverse direction of regular VS Code port forwarding:
 
 ```text
-本机 127.0.0.1:<localPort>
+local machine 127.0.0.1:<localPort>
   -> VS Code Remote tunnel
-  -> 远程工作区 127.0.0.1:<remotePort> 或 /tmp/vscode-port-bridge/<name>.sock
+  -> remote workspace 127.0.0.1:<remotePort> or /tmp/vscode-port-bridge/<name>.sock
 ```
 
-典型用途是让远程容器里的 Playwright、Codex MCP 或其他工具访问本机浏览器的 CDP 端口，同时不需要把本机调试端口开放到网络。
+A typical use case is letting Playwright, Codex MCP, or other tools inside a remote container access the CDP port of a browser running on your local machine, without exposing that debug port to the network.
 
-## 安装
+## Installation
 
-Port Bridge 由两个 companion extensions 组成，必须同时安装：
+Port Bridge is made of two companion extensions. Install both:
 
 - [Port Bridge Local](https://marketplace.visualstudio.com/items?itemName=lwmacct.port-bridge-local) (`lwmacct.port-bridge-local`)
 - [Port Bridge Remote](https://marketplace.visualstudio.com/items?itemName=lwmacct.port-bridge-remote) (`lwmacct.port-bridge-remote`)
 
-两个扩展运行在不同 extension host：
+The extensions run in different extension hosts:
 
 ```text
 Port Bridge Local
   extensionKind: ["ui"]
-  运行在本机 VS Code UI 侧
-  负责连接本机 127.0.0.1:<localPort>
+  runs in the local VS Code UI side
+  connects to local 127.0.0.1:<localPort>
 
 Port Bridge Remote
   extensionKind: ["workspace"]
-  运行在远程 workspace/container/SSH 侧
-  负责创建远程 TCP listener 和 Unix socket
+  runs in the remote workspace/container/SSH side
+  creates remote TCP listeners and Unix sockets
 ```
 
-如果扩展被手动装错位置，或被 `remote.extensionKind` 覆盖到错误位置，扩展会报错并停止启动。
+If either extension is manually installed in the wrong location, or `remote.extensionKind` overrides it into the wrong location, the extension reports an error and stops activating.
 
-## 快速开始
+## Quick Start
 
-在 VS Code 远程窗口的 `settings.json` 中配置要暴露的本机端口：
+Configure the local port to expose in the VS Code remote window `settings.json`:
 
 ```json
 {
@@ -46,29 +48,29 @@ Port Bridge Remote
 }
 ```
 
-这会把本机 `127.0.0.1:9222` 暴露到远程工作区，并创建：
+This exposes local `127.0.0.1:9222` inside the remote workspace and creates:
 
 ```text
 127.0.0.1:9222
 /tmp/vscode-port-bridge/port-9222.sock
 ```
 
-如果本机 `9222` 是 Chrome CDP 端口，可以在远程终端里验证：
+If local `9222` is a Chrome CDP port, verify it from the remote terminal:
 
 ```bash
 curl http://127.0.0.1:9222/json/version
 ```
 
-或通过 Unix socket 验证：
+Or verify through the Unix socket:
 
 ```bash
 curl --unix-socket /tmp/vscode-port-bridge/port-9222.sock \
   http://localhost/json/version
 ```
 
-## Chrome CDP 示例
+## Chrome CDP Example
 
-本机先启动带 CDP 端口的 Chrome 或 Chromium：
+Start Chrome or Chromium with a CDP port on the local machine:
 
 ```bash
 google-chrome \
@@ -77,7 +79,7 @@ google-chrome \
   --user-data-dir=/tmp/port-bridge-chrome-profile
 ```
 
-macOS 可以使用：
+On macOS:
 
 ```bash
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
@@ -86,7 +88,7 @@ macOS 可以使用：
   --user-data-dir=/tmp/port-bridge-chrome-profile
 ```
 
-远程工作区配置：
+Configure the remote workspace:
 
 ```json
 {
@@ -99,14 +101,14 @@ macOS 可以使用：
 }
 ```
 
-远程侧会创建：
+The remote side creates:
 
 ```text
 127.0.0.1:9222
 /tmp/vscode-port-bridge/chrome-cdp.sock
 ```
 
-远程工作区里的 Playwright 可以直接连接远程地址：
+Playwright in the remote workspace can connect directly to the remote address:
 
 ```js
 const { chromium } = require('playwright');
@@ -128,7 +130,7 @@ main().catch((error) => {
 });
 ```
 
-如果要让 Codex 通过 Playwright MCP 复用同一个 CDP 转发地址，可以在 Codex `config.toml` 中配置：
+To let Codex use the same CDP forwarding address through Playwright MCP, configure Codex `config.toml`:
 
 ```toml
 [mcp_servers.playwright]
@@ -136,21 +138,21 @@ command = "npx"
 args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 ```
 
-这里的 MCP server 运行在远程工作区侧，`127.0.0.1:9222` 会通过 Port Bridge 转发到本机浏览器。
+The MCP server runs on the remote workspace side, so `127.0.0.1:9222` is forwarded to the local browser through Port Bridge.
 
-## 配置参考
+## Configuration
 
 ### `portBridge.autoStart`
 
-默认值：`true`
+Default: `true`
 
-远程窗口启动后自动启动已配置的映射。关闭后可以通过命令手动启动。
+Starts configured mappings automatically after the remote window starts. Disable it if you prefer starting manually from a command.
 
 ### `portBridge.mappings`
 
-默认值：`[]`
+Default: `[]`
 
-配置本机到远程的端口映射。最简单的写法是端口号：
+Configures local-to-remote port mappings. The simplest form is a port number:
 
 ```json
 {
@@ -158,7 +160,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 }
 ```
 
-端口号简写等价于：
+The port shorthand is equivalent to:
 
 ```json
 {
@@ -171,7 +173,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 }
 ```
 
-对象写法支持覆盖名称、host、端口和 socket 路径：
+Object mappings can override the name, host, ports, and socket path:
 
 ```json
 {
@@ -188,28 +190,28 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 }
 ```
 
-字段说明：
+Fields:
 
-- `number`: 端口号简写，例如 `9222`。
-- `name`: 映射名称，默认 `port-<localPort>`。
-- `port`: 同时作为 `localPort` 和默认 `remotePort`。
-- `localHost`: 本机侧要连接的 host，默认 `127.0.0.1`。
-- `localPort`: 本机侧要连接的端口；未配置时使用 `port`。
-- `remoteHost`: 远程 TCP 监听地址，默认 `127.0.0.1`。
-- `remotePort`: 远程 TCP 监听端口；未配置时使用 `port`，再 fallback 到 `localPort`。
-- `remoteSocket`: 远程 Unix socket 路径，默认 `/tmp/vscode-port-bridge/<name>.sock`。
+- `number`: port shorthand, for example `9222`.
+- `name`: mapping name; defaults to `port-<localPort>`.
+- `port`: shorthand used for `localPort` and the default `remotePort`.
+- `localHost`: local target host; defaults to `127.0.0.1`.
+- `localPort`: local target port; falls back to `port`.
+- `remoteHost`: remote TCP listen address; defaults to `127.0.0.1`.
+- `remotePort`: remote TCP listen port; falls back to `port`, then `localPort`.
+- `remoteSocket`: remote Unix socket path; defaults to `/tmp/vscode-port-bridge/<name>.sock`.
 
-默认会同时创建远程 TCP listener 和远程 Unix socket。Unix socket 只存在于远程文件系统中，暴露面比 TCP 端口更小；远程 TCP 端口适合只支持 `host:port` 的工具。
+By default Port Bridge creates both a remote TCP listener and a remote Unix socket. The Unix socket exists only in the remote filesystem and has a smaller exposure surface; the remote TCP port is useful for tools that only support `host:port`.
 
 ### `portBridge.controlReconnectDelayMs`
 
-默认值：`1000`
+Default: `1000`
 
-内部 control tunnel 被关闭后，remote 扩展等待多久再重新创建。单位是毫秒。
+Delay, in milliseconds, before the remote extension recreates the internal control tunnel after it is closed.
 
-## 命令
+## Commands
 
-Remote 扩展提供：
+The Remote extension contributes:
 
 ```text
 Port Bridge: Start Remote
@@ -219,78 +221,78 @@ Port Bridge: Reconnect Control Channel
 Port Bridge: Show Remote Status
 ```
 
-Local 扩展提供：
+The Local extension contributes:
 
 ```text
 Port Bridge: Show Local Status
 ```
 
-## 工作原理
+## How It Works
 
-数据路径：
+Data path:
 
 ```text
-远程进程
-  -> 远程 127.0.0.1:<remotePort> 或 /tmp/vscode-port-bridge/<name>.sock
+remote process
+  -> remote 127.0.0.1:<remotePort> or /tmp/vscode-port-bridge/<name>.sock
   -> port-bridge-remote
   -> VS Code forwarded control tunnel
   -> port-bridge-local
-  -> 本机 127.0.0.1:<localPort>
+  -> local machine 127.0.0.1:<localPort>
 ```
 
-`port-bridge-remote` 负责读取 `portBridge.mappings`、创建远程 TCP listener 和 Unix socket、启动内部 control server，并通过 `vscode.env.asExternalUri()` 创建 VS Code tunnel。
+`port-bridge-remote` reads `portBridge.mappings`, creates remote TCP listeners and Unix sockets, starts an internal control server, and creates a VS Code tunnel through `vscode.env.asExternalUri()`.
 
-`port-bridge-local` 负责接收 remote 扩展传来的 forwarded URI，连接 control channel，并按 session 连接本机目标端口。
+`port-bridge-local` receives the forwarded URI from the remote extension, connects to the control channel, and opens local target connections per session.
 
-HTTP、WebSocket、CDP 都不会被解析，只作为 raw TCP bytes 转发。
+HTTP, WebSocket, and CDP traffic are not parsed. They are forwarded as raw TCP bytes.
 
-VS Code 的 Ports/Forwarded Ports 面板中可能会出现一个随机内部 control port。它不是业务端口。如果用户关闭这个 tunnel，remote 扩展会按 `portBridge.controlReconnectDelayMs` 自动重建。
+VS Code's Ports/Forwarded Ports panel may show a random internal control port. It is not a business port. If the user closes that tunnel, the remote extension recreates it after `portBridge.controlReconnectDelayMs`.
 
-更多开发过程中的踩坑记录见 [docs/notes.md](docs/notes.md)。
+More development notes are in [docs/notes.md](docs/notes.md).
 
-## 已知限制
+## Known Limits
 
-- 需要同时安装 Local 和 Remote 两个扩展。
-- 当前 control channel 假设 `vscode.env.asExternalUri()` 在桌面版 Remote/Dev Containers/Remote SSH 下返回本机可直接 TCP 连接的 URI。
-- Web 版 VS Code 或某些 cloud tunnel 环境可能返回 HTTPS 代理 URI，这类环境需要额外适配。
-- Port Bridge 会把本机端口能力暴露到远程环境。CDP 端口权限很高，建议优先绑定本机 `127.0.0.1`，远程侧也优先使用 Unix socket 或 `127.0.0.1`，不要绑定到 `0.0.0.0`。
+- Both Local and Remote extensions must be installed.
+- The current control channel assumes `vscode.env.asExternalUri()` returns a locally reachable TCP URI in desktop Remote/Dev Containers/Remote SSH.
+- VS Code for the Web or some cloud tunnel environments may return an HTTPS proxy URI; those environments need additional handling.
+- Port Bridge exposes local port capabilities to the remote environment. CDP ports are powerful, so prefer binding the local side to `127.0.0.1`, and prefer remote Unix sockets or remote `127.0.0.1`. Do not bind privileged debug protocols to `0.0.0.0`.
 
-## 开发
+## Development
 
-安装依赖：
+Install dependencies:
 
 ```bash
 pnpm install
 ```
 
-编译：
+Compile:
 
 ```bash
 pnpm run compile
 ```
 
-类型检查：
+Typecheck:
 
 ```bash
 pnpm run typecheck
 ```
 
-打包两个 VSIX：
+Package both VSIX files:
 
 ```bash
 pnpm run package
 ```
 
-输出：
+Output:
 
 ```text
 artifacts/vsix/port-bridge-local-<version>.vsix
 artifacts/vsix/port-bridge-remote-<version>.vsix
 ```
 
-发布说明见 [docs/publish.md](docs/publish.md)。
+Publishing notes are in [docs/publish.md](docs/publish.md). Localization and README language rules are in [docs/localization.md](docs/localization.md).
 
-## 相关资料
+## References
 
 - [Extension host placement](https://code.visualstudio.com/api/advanced-topics/extension-host)
 - [Remote extension guidance](https://code.visualstudio.com/api/advanced-topics/remote-extensions)
