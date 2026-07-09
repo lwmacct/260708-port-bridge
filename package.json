@@ -1,7 +1,7 @@
 {
   "name": "local-port-bridge-workspace",
   "private": true,
-  "version": "0.4.260709",
+  "version": "0.5.260709",
   "license": "MIT",
   "packageManager": "pnpm@11.10.0",
   "engines": {

@@ -1,0 +1,76 @@
+name: ci
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        env:
+          PNPM_CONFIG_MINIMUM_RELEASE_AGE: "0"
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Compile
+        run: pnpm run compile
+
+      - name: Package extensions
+        run: |
+          set -euo pipefail
+
+          __package_extensions() {
+            rm -rf artifacts
+            mkdir -p artifacts
+
+            for _package_json in extensions/*/package.json; do
+              _package_dir="$(dirname "${_package_json}")"
+              _package_name="$(node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log(pkg.name);" "${_package_json}")"
+              _package_version="$(node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log(pkg.version);" "${_package_json}")"
+              _artifact="../../artifacts/${_package_name}-${_package_version}.vsix"
+
+              pnpm --dir "${_package_dir}" exec vsce package \
+                --allow-missing-repository \
+                --out "${_artifact}"
+            done
+          }
+
+          __main() {
+            __package_extensions
+            ls -lh artifacts/*.vsix
+          }
+
+          __main "$@"
+
+      - name: Upload VSIX artifacts
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: vsix-packages
+          path: artifacts/*.vsix
+          if-no-files-found: error
+          retention-days: 7

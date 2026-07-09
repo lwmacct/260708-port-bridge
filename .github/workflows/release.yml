@@ -1,0 +1,226 @@
+name: release
+run-name: release ${{ github.ref_name || inputs.tag }}
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to publish.
+        required: true
+        type: string
+      sha:
+        description: Optional commit SHA that the release tag must point to.
+        required: false
+        type: string
+
+concurrency:
+  group: release-${{ github.ref_name || inputs.tag }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.sha || inputs.tag || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Validate release ref
+        id: release-ref
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          RELEASE_SHA_INPUT: ${{ inputs.sha }}
+        run: |
+          set -euo pipefail
+
+          __main() {
+            test -n "${RELEASE_TAG}"
+
+            git fetch --force --tags origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+
+            _tag_sha="$(git rev-list -n 1 "${RELEASE_TAG}")"
+
+            if [ -n "${RELEASE_SHA_INPUT}" ]; then
+              _input_sha="$(git rev-parse "${RELEASE_SHA_INPUT}^{commit}")"
+
+              if [ "${_tag_sha}" != "${_input_sha}" ]; then
+                echo "Tag ${RELEASE_TAG} points to ${_tag_sha}, not ${_input_sha}." >&2
+                exit 1
+              fi
+            fi
+
+            {
+              echo "tag=${RELEASE_TAG}"
+              echo "sha=${_tag_sha}"
+            } >> "${GITHUB_OUTPUT}"
+          }
+
+          __main "$@"
+
+      - name: Resolve release version
+        id: release-version
+        env:
+          RELEASE_TAG: ${{ steps.release-ref.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          __main() {
+            _version="${RELEASE_TAG#v}"
+
+            node -e "
+              const semver = process.argv[1];
+              if (!/^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$/.test(semver)) {
+                console.error('Tag must resolve to a valid extension version. Use tags like v1.2.3 or 1.2.3.');
+                process.exit(1);
+              }
+            " "${_version}"
+
+            echo "version=${_version}" >> "${GITHUB_OUTPUT}"
+          }
+
+          __main "$@"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        env:
+          PNPM_CONFIG_MINIMUM_RELEASE_AGE: "0"
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Apply release version
+        env:
+          RELEASE_VERSION: ${{ steps.release-version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          __set_package_version() {
+            _package_json="$1"
+
+            node -e "
+              const fs = require('fs');
+              const path = process.argv[1];
+              const version = process.argv[2];
+              const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+              pkg.version = version;
+              fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+            " "${_package_json}" "${RELEASE_VERSION}"
+          }
+
+          __main() {
+            test -n "${RELEASE_VERSION}"
+
+            for _package_json in extensions/*/package.json; do
+              __set_package_version "${_package_json}"
+            done
+          }
+
+          __main "$@"
+
+      - name: Compile
+        run: pnpm run compile
+
+      - name: Package extensions
+        env:
+          RELEASE_VERSION: ${{ steps.release-version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          __package_extensions() {
+            rm -rf artifacts
+            mkdir -p artifacts
+
+            for _package_json in extensions/*/package.json; do
+              _package_dir="$(dirname "${_package_json}")"
+              _package_name="$(node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log(pkg.name);" "${_package_json}")"
+              _artifact="../../artifacts/${_package_name}-${RELEASE_VERSION}.vsix"
+
+              pnpm --dir "${_package_dir}" exec vsce package \
+                --allow-missing-repository \
+                --out "${_artifact}"
+            done
+          }
+
+          __main() {
+            __package_extensions
+            ls -lh artifacts/*.vsix
+          }
+
+          __main "$@"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.release-ref.outputs.tag }}
+        run: |
+          set -euo pipefail
+
+          __main() {
+            shopt -s nullglob
+            _artifacts=(artifacts/*.vsix)
+
+            if [ "${#_artifacts[@]}" -eq 0 ]; then
+              echo "No VSIX artifacts found." >&2
+              exit 1
+            fi
+
+            if gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+              gh release upload "${RELEASE_TAG}" "${_artifacts[@]}" --clobber
+            else
+              gh release create "${RELEASE_TAG}" "${_artifacts[@]}" \
+                --verify-tag \
+                --title "${RELEASE_TAG}" \
+                --notes "Release ${RELEASE_TAG}"
+            fi
+          }
+
+          __main "$@"
+
+      - name: Print summary
+        env:
+          RELEASE_TAG: ${{ steps.release-ref.outputs.tag }}
+          RELEASE_SHA: ${{ steps.release-ref.outputs.sha }}
+          RELEASE_VERSION: ${{ steps.release-version.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          __main() {
+            {
+              echo "## Release summary"
+              echo
+              echo "| Item | Value |"
+              echo "| --- | --- |"
+              echo "| Tag | \`${RELEASE_TAG}\` |"
+              echo "| Version | \`${RELEASE_VERSION}\` |"
+              echo "| Commit | \`${RELEASE_SHA}\` |"
+              echo
+              echo "### Assets"
+              echo
+
+              for _artifact in artifacts/*.vsix; do
+                echo "- \`$(basename "${_artifact}")\`"
+              done
+            } >> "${GITHUB_STEP_SUMMARY}"
+          }
+
+          __main "$@"
