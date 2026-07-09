@@ -235,6 +235,88 @@ curl http://127.0.0.1:9222/json/version
 curl http://127.0.0.1:39222/json/version
 ```
 
+### Playwright CDP 转发示例
+
+本机先启动带 CDP 端口的 Chromium/Chrome：
+
+```bash
+google-chrome \
+  --remote-debugging-address=127.0.0.1 \
+  --remote-debugging-port=9222 \
+  --user-data-dir=/tmp/port-bridge-chrome-profile
+```
+
+macOS 可以使用：
+
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
+  --remote-debugging-address=127.0.0.1 \
+  --remote-debugging-port=9222 \
+  --user-data-dir=/tmp/port-bridge-chrome-profile
+```
+
+VS Code 远程工作区配置：
+
+```json
+{
+  "portBridge.mappings": [
+    {
+      "name": "chrome-cdp",
+      "localHost": "127.0.0.1",
+      "localPort": 9222,
+      "remoteHost": "127.0.0.1",
+      "remotePort": 9222
+    }
+  ]
+}
+```
+
+远程容器或 SSH 工作区里验证 CDP 已经转发成功：
+
+```bash
+curl http://127.0.0.1:9222/json/version
+```
+
+然后在远程工作区里用 Playwright 连接这个 CDP 地址：
+
+```js
+const { chromium } = require('playwright');
+
+async function main() {
+  const browser = await chromium.connectOverCDP('http://127.0.0.1:9222');
+  const context = browser.contexts()[0];
+  const page = context.pages()[0] || await context.newPage();
+
+  await page.goto('https://example.com');
+  console.log(await page.title());
+
+  await browser.close();
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
+```
+
+运行：
+
+```bash
+node cdp-example.js
+```
+
+这里的 Playwright 进程运行在远程环境里，但 `http://127.0.0.1:9222` 实际会通过 Port Bridge 连接到本机浏览器的 CDP 端口。
+
+如果要让 Codex 通过 Playwright MCP 复用同一个 CDP 转发地址，可以在 Codex `config.toml` 中配置：
+
+```toml
+[mcp_servers.playwright]
+command = "npx"
+args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
+```
+
+此时 Playwright MCP server 运行在远程工作区侧，`--cdp-endpoint` 指向的是远程 `127.0.0.1:9222`，最终会通过 Port Bridge 转发到本机浏览器。
+
 ## 命令
 
 Remote 扩展提供：
