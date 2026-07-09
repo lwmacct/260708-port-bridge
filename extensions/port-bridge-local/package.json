@@ -2,7 +2,7 @@
   "name": "port-bridge-local",
   "displayName": "Port Bridge Local",
   "description": "Local-side endpoint for Port Bridge.",
-  "version": "0.5.260709",
+  "version": "0.6.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "engines": {
