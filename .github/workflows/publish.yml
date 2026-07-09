@@ -1,0 +1,71 @@
+name: publish
+run-name: publish ${{ inputs.source-tag }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      source-tag:
+        description: Release tag to publish.
+        required: true
+        type: string
+      source-sha:
+        description: Optional commit SHA that the release tag must point to.
+        required: false
+        type: string
+
+concurrency:
+  group: publish-${{ inputs.source-tag }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v7.0.0
+        with:
+          ref: ${{ inputs.source-sha || inputs.source-tag }}
+          fetch-depth: 0
+
+      - name: Validate release ref
+        uses: lwmacct/260707-action-verified-tag-ref@main
+        with:
+          tag: ${{ inputs.source-tag }}
+          sha: ${{ inputs.source-sha }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        env:
+          PNPM_CONFIG_MINIMUM_RELEASE_AGE: "0"
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate package versions
+        env:
+          SOURCE_TAG: ${{ inputs.source-tag }}
+        run: scripts/verify-release-tag.sh
+
+      - name: Typecheck
+        run: pnpm run typecheck
+
+      - name: Package extensions
+        run: pnpm run package
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.source-tag }}
+        run: scripts/publish-github-release.sh
