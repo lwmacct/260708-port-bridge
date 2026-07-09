@@ -49,35 +49,7 @@ port-bridge-remote 必须运行在远程 workspace extension host
 
 如果用户手动装错位置，或用 `remote.extensionKind` 覆盖导致运行位置错误，扩展会报错并停止启动。
 
-注意：remote 扩展不能用 `extensionDependencies` 依赖 local 扩展。`extensionDependencies` 会要求依赖扩展在当前激活环境中已加载；跨 UI host 和 workspace host 时会导致 remote 扩展激活失败。当前实现只在建立 control channel 时调用 local 扩展命令，如果 local 未安装或未启用，会给出明确错误。
-
-## 不再需要 Proposed API
-
-旧实现尝试使用：
-
-```ts
-vscode.workspace.getRemoteExecServer(authority)
-```
-
-但 Dev Containers 的 `attached-container+...` authority 不会给普通扩展暴露 `ExecServer`，会返回 `undefined`。
-
-当前实现改为：
-
-```text
-remote extension
-  -> 在远程启动 control TCP server
-  -> vscode.env.asExternalUri(http://127.0.0.1:<controlPort>)
-  -> VS Code 建立远程端口转发
-  -> local extension 连接 forwarded local URI
-```
-
-因此当前版本不需要：
-
-```bash
-code --enable-proposed-api=...
-```
-
-也不需要 `enabledApiProposals`。
+踩坑和尝试记录见 [docs/notes.md](docs/notes.md)。
 
 ## 工作原理
 
@@ -129,12 +101,7 @@ port-bridge-remote 127.0.0.1:<random-control-port>
 
 这个端口是通过 `vscode.env.asExternalUri()` 创建的 VS Code tunnel，所以会出现在 VS Code Ports/Forwarded Ports 里。VS Code 官方 API 说明这类 tunnel 的生命周期由编辑器管理，用户可以关闭它。
 
-如果你误关了这个随机 control port：
-
-- 已有连接会断开。
-- remote 扩展会在 `portBridge.controlReconnectDelayMs` 后自动重新创建 tunnel。
-- 也可以执行 `Port Bridge: Reconnect Control Channel` 手动重连。
-- remote 状态栏项点击后也会触发重连。
+如果误关这个随机 control port，remote 扩展会自动重新创建 tunnel。详细记录见 [docs/notes.md](docs/notes.md)。
 
 默认重连延迟：
 
@@ -375,31 +342,7 @@ artifacts/vsix/port-bridge-local-<version>.vsix
 artifacts/vsix/port-bridge-remote-<version>.vsix
 ```
 
-## 发布
-
-VS Code Marketplace 官方发布文档：
-
-https://code.visualstudio.com/api/working-with-extensions/publishing-extension
-
-本仓库使用 GitHub Actions 的 `publish` workflow 发布：
-
-- 创建 `v<version>` tag，且 tag 版本必须和根目录及两个扩展的 `package.json` 版本一致。
-- `release.yml` 会把 tag 转发给 `publish.yml`。
-- `publish.yml` 会校验 tag、执行类型检查、打包 VSIX、发布 GitHub Release，然后用 Microsoft Entra ID 发布到 Visual Studio Marketplace。
-
-Marketplace 发布使用官方推荐的 secure automated publishing：
-
-- GitHub Actions environment: `marketplace`
-- optional environment variables:
-  - `AZURE_CLIENT_ID`
-  - `AZURE_TENANT_ID`
-  - `AZURE_SUBSCRIPTION_ID`
-- workflow permission: `id-token: write`
-- 发布命令: `vsce publish --azure-credential`
-
-如果上面的 Azure variables 未配置，workflow 会跳过 Visual Studio Marketplace 发布，只发布 GitHub Release。
-
-需要先在 Azure 中给发布身份配置 federated credential，并把该身份加入 Visual Studio Marketplace publisher `lwmacct`，角色至少为 `Contributor`。
+发布说明见 [docs/publish.md](docs/publish.md)。
 
 ## 关键 VS Code API
 
