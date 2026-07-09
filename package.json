@@ -1,7 +1,7 @@
 {
   "name": "@lwmacct/260708-port-bridge",
   "private": true,
-  "version": "0.6.260709",
+  "version": "0.7.260709",
   "license": "MIT",
   "packageManager": "pnpm@11.10.0",
   "engines": {
@@ -11,7 +11,8 @@
     "compile": "pnpm -r --filter './extensions/*' run compile",
     "watch": "pnpm -r --parallel --filter './extensions/*' run watch",
     "typecheck": "pnpm -r --filter './extensions/*' run typecheck",
-    "package": "pnpm -r --filter './extensions/*' run package"
+    "package": "pnpm run compile && pnpm run package:vsix",
+    "package:vsix": "scripts/package-vsix.sh"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",

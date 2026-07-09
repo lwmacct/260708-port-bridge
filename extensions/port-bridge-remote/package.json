@@ -2,7 +2,7 @@
   "name": "port-bridge-remote",
   "displayName": "Port Bridge Remote",
   "description": "Remote-side endpoint for Port Bridge.",
-  "version": "0.6.260709",
+  "version": "0.7.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "engines": {
@@ -107,7 +107,6 @@
   "scripts": {
     "compile": "tsc -p .",
     "watch": "tsc -watch -p .",
-    "typecheck": "tsc -p . --noEmit",
-    "package": "pnpm run compile && vsce package --allow-missing-repository --out ../../port-bridge-remote-0.5.260709.vsix"
+    "typecheck": "tsc -p . --noEmit"
   }
 }

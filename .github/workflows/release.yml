@@ -137,36 +137,8 @@ jobs:
 
           __main "$@"
 
-      - name: Compile
-        run: pnpm run compile
-
       - name: Package extensions
-        env:
-          RELEASE_VERSION: ${{ steps.release-version.outputs.version }}
-        run: |
-          set -euo pipefail
-
-          __package_extensions() {
-            rm -rf artifacts
-            mkdir -p artifacts
-
-            for _package_json in extensions/*/package.json; do
-              _package_dir="$(dirname "${_package_json}")"
-              _package_name="$(node -e "const fs = require('fs'); const pkg = JSON.parse(fs.readFileSync(process.argv[1], 'utf8')); console.log(pkg.name);" "${_package_json}")"
-              _artifact="../../artifacts/${_package_name}-${RELEASE_VERSION}.vsix"
-
-              pnpm --dir "${_package_dir}" exec vsce package \
-                --allow-missing-repository \
-                --out "${_artifact}"
-            done
-          }
-
-          __main() {
-            __package_extensions
-            ls -lh artifacts/*.vsix
-          }
-
-          __main "$@"
+        run: pnpm run package
 
       - name: Publish GitHub Release
         env:
@@ -177,7 +149,7 @@ jobs:
 
           __main() {
             shopt -s nullglob
-            _artifacts=(artifacts/*.vsix)
+            _artifacts=(artifacts/vsix/*.vsix)
 
             if [ "${#_artifacts[@]}" -eq 0 ]; then
               echo "No VSIX artifacts found." >&2
@@ -217,7 +189,7 @@ jobs:
               echo "### Assets"
               echo
 
-              for _artifact in artifacts/*.vsix; do
+              for _artifact in artifacts/vsix/*.vsix; do
                 echo "- \`$(basename "${_artifact}")\`"
               done
             } >> "${GITHUB_STEP_SUMMARY}"

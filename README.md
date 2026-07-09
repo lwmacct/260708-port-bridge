@@ -366,8 +366,8 @@ pnpm run package
 输出：
 
 ```text
-port-bridge-local-0.5.260709.vsix
-port-bridge-remote-0.5.260709.vsix
+artifacts/vsix/port-bridge-local-0.6.260709.vsix
+artifacts/vsix/port-bridge-remote-0.6.260709.vsix
 ```
 
 ## 关键 VS Code API
