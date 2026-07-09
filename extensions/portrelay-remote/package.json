@@ -1,19 +1,19 @@
 {
-  "name": "port-bridge-remote",
-  "displayName": "Port Bridge Remote",
+  "name": "portrelay-remote",
+  "displayName": "PortRelay Remote",
   "description": "%extension.description%",
   "version": "0.11.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lwmacct/260708-port-bridge"
+    "url": "https://github.com/lwmacct/260708-portrelay"
   },
-  "homepage": "https://github.com/lwmacct/260708-port-bridge#readme",
+  "homepage": "https://github.com/lwmacct/260708-portrelay#readme",
   "bugs": {
-    "url": "https://github.com/lwmacct/260708-port-bridge/issues"
+    "url": "https://github.com/lwmacct/260708-portrelay/issues"
   },
-  "qna": "https://github.com/lwmacct/260708-port-bridge/issues",
+  "qna": "https://github.com/lwmacct/260708-portrelay/issues",
   "icon": "icon.png",
   "galleryBanner": {
     "color": "#111827",
@@ -21,13 +21,13 @@
   },
   "badges": [
     {
-      "url": "https://img.shields.io/github/actions/workflow/status/lwmacct/260708-port-bridge/ci.yml?branch=main&label=ci",
-      "href": "https://github.com/lwmacct/260708-port-bridge/actions/workflows/ci.yml",
+      "url": "https://img.shields.io/github/actions/workflow/status/lwmacct/260708-portrelay/ci.yml?branch=main&label=ci",
+      "href": "https://github.com/lwmacct/260708-portrelay/actions/workflows/ci.yml",
       "description": "CI status"
     },
     {
-      "url": "https://img.shields.io/github/license/lwmacct/260708-port-bridge",
-      "href": "https://github.com/lwmacct/260708-port-bridge/blob/main/LICENSE",
+      "url": "https://img.shields.io/github/license/lwmacct/260708-portrelay",
+      "href": "https://github.com/lwmacct/260708-portrelay/blob/main/LICENSE",
       "description": "License"
     }
   ],
@@ -56,35 +56,35 @@
   "contributes": {
     "commands": [
       {
-        "command": "portBridge.remote.start",
+        "command": "portrelay.remote.start",
         "title": "%commands.start.title%"
       },
       {
-        "command": "portBridge.remote.stop",
+        "command": "portrelay.remote.stop",
         "title": "%commands.stop.title%"
       },
       {
-        "command": "portBridge.remote.restart",
+        "command": "portrelay.remote.restart",
         "title": "%commands.restart.title%"
       },
       {
-        "command": "portBridge.remote.reconnectControl",
+        "command": "portrelay.remote.reconnectControl",
         "title": "%commands.reconnectControl.title%"
       },
       {
-        "command": "portBridge.remote.showStatus",
+        "command": "portrelay.remote.showStatus",
         "title": "%commands.showRemoteStatus.title%"
       }
     ],
     "configuration": {
-      "title": "Port Bridge",
+      "title": "PortRelay",
       "properties": {
-        "portBridge.autoStart": {
+        "portrelay.autoStart": {
           "type": "boolean",
           "default": true,
           "description": "%configuration.autoStart.description%"
         },
-        "portBridge.mappings": {
+        "portrelay.mappings": {
           "type": "array",
           "default": [],
           "description": "%configuration.mappings.description%",
@@ -138,7 +138,7 @@
             }
           }
         },
-        "portBridge.controlReconnectDelayMs": {
+        "portrelay.controlReconnectDelayMs": {
           "type": "number",
           "default": 1000,
           "minimum": 100,

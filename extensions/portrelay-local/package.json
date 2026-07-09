@@ -1,19 +1,19 @@
 {
-  "name": "port-bridge-local",
-  "displayName": "Port Bridge Local",
+  "name": "portrelay-local",
+  "displayName": "PortRelay Local",
   "description": "%extension.description%",
   "version": "0.11.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lwmacct/260708-port-bridge"
+    "url": "https://github.com/lwmacct/260708-portrelay"
   },
-  "homepage": "https://github.com/lwmacct/260708-port-bridge#readme",
+  "homepage": "https://github.com/lwmacct/260708-portrelay#readme",
   "bugs": {
-    "url": "https://github.com/lwmacct/260708-port-bridge/issues"
+    "url": "https://github.com/lwmacct/260708-portrelay/issues"
   },
-  "qna": "https://github.com/lwmacct/260708-port-bridge/issues",
+  "qna": "https://github.com/lwmacct/260708-portrelay/issues",
   "icon": "icon.png",
   "galleryBanner": {
     "color": "#111827",
@@ -21,13 +21,13 @@
   },
   "badges": [
     {
-      "url": "https://img.shields.io/github/actions/workflow/status/lwmacct/260708-port-bridge/ci.yml?branch=main&label=ci",
-      "href": "https://github.com/lwmacct/260708-port-bridge/actions/workflows/ci.yml",
+      "url": "https://img.shields.io/github/actions/workflow/status/lwmacct/260708-portrelay/ci.yml?branch=main&label=ci",
+      "href": "https://github.com/lwmacct/260708-portrelay/actions/workflows/ci.yml",
       "description": "CI status"
     },
     {
-      "url": "https://img.shields.io/github/license/lwmacct/260708-port-bridge",
-      "href": "https://github.com/lwmacct/260708-port-bridge/blob/main/LICENSE",
+      "url": "https://img.shields.io/github/license/lwmacct/260708-portrelay",
+      "href": "https://github.com/lwmacct/260708-portrelay/blob/main/LICENSE",
       "description": "License"
     }
   ],
@@ -49,7 +49,7 @@
   "main": "./dist/extension.js",
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:portBridge.local.connectControl"
+    "onCommand:portrelay.local.connectControl"
   ],
   "extensionKind": [
     "ui"
@@ -57,7 +57,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "portBridge.local.showStatus",
+        "command": "portrelay.local.showStatus",
         "title": "%commands.showLocalStatus.title%"
       }
     ]

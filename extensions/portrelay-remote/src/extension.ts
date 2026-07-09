@@ -33,8 +33,8 @@ interface Session {
 const DEFAULT_HOST = '127.0.0.1';
 const ENDPOINT_PATTERN = 'host:port, tcp:host:port, tcp://host:port, or unix:/absolute/path.sock';
 
-class RemoteBridge {
-  private readonly output = vscode.window.createOutputChannel('Port Bridge Remote');
+class RemoteRelay {
+  private readonly output = vscode.window.createOutputChannel('PortRelay Remote');
   private readonly status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 98);
   private readonly sessions = new Map<number, Session>();
   private readonly servers: net.Server[] = [];
@@ -48,9 +48,9 @@ class RemoteBridge {
   private starting: Promise<void> | undefined;
 
   constructor() {
-    this.status.command = 'portBridge.remote.reconnectControl';
-    this.status.text = '$(plug) Port Bridge Remote: stopped';
-    this.status.tooltip = 'Reconnect Port Bridge control channel';
+    this.status.command = 'portrelay.remote.reconnectControl';
+    this.status.text = '$(plug) PortRelay Remote: stopped';
+    this.status.tooltip = 'Reconnect PortRelay control channel';
     this.status.show();
   }
 
@@ -65,7 +65,7 @@ class RemoteBridge {
       return this.starting;
     }
 
-    this.starting = this.startBridge();
+    this.starting = this.startRelay();
     try {
       await this.starting;
     } finally {
@@ -108,7 +108,7 @@ class RemoteBridge {
     const state = this.controlServer ? 'running' : 'stopped';
     const control = this.controlSocket && !this.controlSocket.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `Port Bridge Remote is ${state}. control=${control}, ` +
+      `PortRelay Remote is ${state}. control=${control}, ` +
       `controlPort=${this.controlPort ?? 'none'}, forwarded=${this.lastForwardedControlUri ?? 'none'}, ` +
       `sessions=${this.sessions.size}`
     );
@@ -125,14 +125,14 @@ class RemoteBridge {
     await this.connectLocalControl();
   }
 
-  private async startBridge(): Promise<void> {
+  private async startRelay(): Promise<void> {
     await this.stop();
     this.running = true;
 
     const mappings = this.readMappings();
     if (mappings.length === 0) {
       this.setStatus('no mappings');
-      this.log('No portBridge.mappings are configured.');
+      this.log('No portrelay.mappings are configured.');
       this.running = false;
       return;
     }
@@ -182,13 +182,13 @@ class RemoteBridge {
     this.log(`Forwarded control URI: ${localUri.toString()}`);
 
     try {
-      await vscode.commands.executeCommand('portBridge.local.connectControl', {
+      await vscode.commands.executeCommand('portrelay.local.connectControl', {
         uri: localUri.toString()
       });
     } catch (error) {
       throw new Error(
-        `Port Bridge Local is not available on the UI side. Install and enable ` +
-        `lwmacct.port-bridge-local locally, then reload the window. ` +
+        `PortRelay Local is not available on the UI side. Install and enable ` +
+        `lwmacct.portrelay-local locally, then reload the window. ` +
         `Original error: ${error instanceof Error ? error.message : String(error)}`
       );
     }
@@ -199,7 +199,7 @@ class RemoteBridge {
       return;
     }
 
-    const config = vscode.workspace.getConfiguration('portBridge');
+    const config = vscode.workspace.getConfiguration('portrelay');
     const delayMs = config.get<number>('controlReconnectDelayMs', 1000);
     const delay = Math.min(Math.max(delayMs, 100), 30000);
     this.setStatus(`reconnecting in ${delay}ms`);
@@ -354,7 +354,7 @@ class RemoteBridge {
   }
 
   private readMappings(): Mapping[] {
-    const config = vscode.workspace.getConfiguration('portBridge');
+    const config = vscode.workspace.getConfiguration('portrelay');
     const rawMappings = config.get<unknown[]>('mappings', []);
     const mappings: Mapping[] = [];
 
@@ -514,7 +514,7 @@ class RemoteBridge {
   }
 
   private setStatus(state: string): void {
-    this.status.text = `$(plug) Port Bridge Remote: ${state}`;
+    this.status.text = `$(plug) PortRelay Remote: ${state}`;
   }
 
   private log(message: string): void {
@@ -522,46 +522,46 @@ class RemoteBridge {
   }
 }
 
-let bridge: RemoteBridge | undefined;
+let relay: RemoteRelay | undefined;
 
 function isRunningInWorkspaceHost(): boolean {
-  const extension = vscode.extensions.getExtension('lwmacct.port-bridge-remote');
+  const extension = vscode.extensions.getExtension('lwmacct.portrelay-remote');
   return extension?.extensionKind === vscode.ExtensionKind.Workspace;
 }
 
 export function activate(context: vscode.ExtensionContext): void {
   if (!isRunningInWorkspaceHost()) {
     void vscode.window.showErrorMessage(
-      'Port Bridge Remote 必须运行在远程 workspace extension host。请把它安装/启用在远程侧，不要作为本机 UI 扩展运行。'
+      'PortRelay Remote 必须运行在远程 workspace extension host。请把它安装/启用在远程侧，不要作为本机 UI 扩展运行。'
     );
     return;
   }
 
   if (!vscode.env.remoteName) {
     void vscode.window.showErrorMessage(
-      'Port Bridge Remote 只能在 Remote SSH、Dev Containers 等远程窗口中使用。'
+      'PortRelay Remote 只能在 Remote SSH、Dev Containers 等远程窗口中使用。'
     );
     return;
   }
 
-  bridge = new RemoteBridge();
+  relay = new RemoteRelay();
   context.subscriptions.push(
-    bridge,
-    vscode.commands.registerCommand('portBridge.remote.start', () => bridge?.start()),
-    vscode.commands.registerCommand('portBridge.remote.stop', () => bridge?.stop()),
-    vscode.commands.registerCommand('portBridge.remote.restart', () => bridge?.restart()),
-    vscode.commands.registerCommand('portBridge.remote.reconnectControl', () => bridge?.reconnectControl()),
-    vscode.commands.registerCommand('portBridge.remote.showStatus', () => bridge?.showStatus())
+    relay,
+    vscode.commands.registerCommand('portrelay.remote.start', () => relay?.start()),
+    vscode.commands.registerCommand('portrelay.remote.stop', () => relay?.stop()),
+    vscode.commands.registerCommand('portrelay.remote.restart', () => relay?.restart()),
+    vscode.commands.registerCommand('portrelay.remote.reconnectControl', () => relay?.reconnectControl()),
+    vscode.commands.registerCommand('portrelay.remote.showStatus', () => relay?.showStatus())
   );
 
-  const config = vscode.workspace.getConfiguration('portBridge');
+  const config = vscode.workspace.getConfiguration('portrelay');
   if (config.get<boolean>('autoStart', true)) {
-    void bridge.start().catch((error) => {
-      void vscode.window.showErrorMessage(`Port Bridge remote failed to start: ${error.message}`);
+    void relay.start().catch((error) => {
+      void vscode.window.showErrorMessage(`PortRelay remote failed to start: ${error.message}`);
     });
   }
 }
 
 export function deactivate(): void {
-  void bridge?.stop();
+  void relay?.stop();
 }

@@ -21,9 +21,9 @@ importers:
         specifier: ^7.0.2
         version: 7.0.2
 
-  extensions/port-bridge-local: {}
+  extensions/portrelay-local: {}
 
-  extensions/port-bridge-remote: {}
+  extensions/portrelay-remote: {}
 
 packages:
 

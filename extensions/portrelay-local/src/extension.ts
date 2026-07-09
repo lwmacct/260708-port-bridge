@@ -31,8 +31,8 @@ interface UnixEndpoint {
   readonly path: string;
 }
 
-class LocalBridge {
-  private readonly output = vscode.window.createOutputChannel('Port Bridge Local');
+class LocalRelay {
+  private readonly output = vscode.window.createOutputChannel('PortRelay Local');
   private readonly status = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 99);
   private readonly sessions = new Map<number, Session>();
   private readonly pendingData = new Map<number, Buffer[]>();
@@ -40,8 +40,8 @@ class LocalBridge {
   private control: net.Socket | undefined;
 
   constructor() {
-    this.status.command = 'portBridge.local.showStatus';
-    this.status.text = '$(plug) Port Bridge Local: waiting';
+    this.status.command = 'portrelay.local.showStatus';
+    this.status.text = '$(plug) PortRelay Local: waiting';
     this.status.show();
   }
 
@@ -54,7 +54,7 @@ class LocalBridge {
   showStatus(): void {
     const state = this.control && !this.control.destroyed ? 'connected' : 'waiting';
     void vscode.window.showInformationMessage(
-      `Port Bridge Local is ${state}. sessions=${this.sessions.size}`
+      `PortRelay Local is ${state}. sessions=${this.sessions.size}`
     );
   }
 
@@ -285,7 +285,7 @@ class LocalBridge {
   }
 
   private setStatus(state: string): void {
-    this.status.text = `$(plug) Port Bridge Local: ${state}`;
+    this.status.text = `$(plug) PortRelay Local: ${state}`;
   }
 
   private log(message: string): void {
@@ -293,33 +293,33 @@ class LocalBridge {
   }
 }
 
-let bridge: LocalBridge | undefined;
+let relay: LocalRelay | undefined;
 
 function isRunningInUiHost(): boolean {
-  const extension = vscode.extensions.getExtension('lwmacct.port-bridge-local');
+  const extension = vscode.extensions.getExtension('lwmacct.portrelay-local');
   return extension?.extensionKind === vscode.ExtensionKind.UI;
 }
 
 export function activate(context: vscode.ExtensionContext): void {
   if (!isRunningInUiHost()) {
     void vscode.window.showErrorMessage(
-      'Port Bridge Local 必须运行在本机 UI extension host。请把它安装/启用在本机侧，不要作为远程 workspace 扩展运行。'
+      'PortRelay Local 必须运行在本机 UI extension host。请把它安装/启用在本机侧，不要作为远程 workspace 扩展运行。'
     );
     return;
   }
 
-  bridge = new LocalBridge();
+  relay = new LocalRelay();
   context.subscriptions.push(
-    bridge,
-    vscode.commands.registerCommand('portBridge.local.connectControl', (payload: ConnectControlPayload) => {
-      bridge?.connectControl(payload);
+    relay,
+    vscode.commands.registerCommand('portrelay.local.connectControl', (payload: ConnectControlPayload) => {
+      relay?.connectControl(payload);
     }),
-    vscode.commands.registerCommand('portBridge.local.showStatus', () => {
-      bridge?.showStatus();
+    vscode.commands.registerCommand('portrelay.local.showStatus', () => {
+      relay?.showStatus();
     })
   );
 }
 
 export function deactivate(): void {
-  bridge?.dispose();
+  relay?.dispose();
 }

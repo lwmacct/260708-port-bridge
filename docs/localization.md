@@ -1,6 +1,6 @@
 # Localization and README Language Policy
 
-本文档记录 Port Bridge 的语言策略、VS Code 扩展展示限制，以及当前实现依据。
+本文档记录 PortRelay 的语言策略、VS Code 扩展展示限制，以及当前实现依据。
 
 ## 目标
 
@@ -21,19 +21,19 @@ README.en.md
 扩展目录：
 
 ```text
-extensions/port-bridge-local/README.md
-extensions/port-bridge-local/README.en.md
-extensions/port-bridge-remote/README.md
-extensions/port-bridge-remote/README.en.md
+extensions/portrelay-local/README.md
+extensions/portrelay-local/README.en.md
+extensions/portrelay-remote/README.md
+extensions/portrelay-remote/README.en.md
 ```
 
 扩展 manifest 本地化文件：
 
 ```text
-extensions/port-bridge-local/package.nls.json
-extensions/port-bridge-local/package.nls.zh-cn.json
-extensions/port-bridge-remote/package.nls.json
-extensions/port-bridge-remote/package.nls.zh-cn.json
+extensions/portrelay-local/package.nls.json
+extensions/portrelay-local/package.nls.zh-cn.json
+extensions/portrelay-remote/package.nls.json
+extensions/portrelay-remote/package.nls.zh-cn.json
 ```
 
 ## VS Code 显示语言
@@ -83,10 +83,10 @@ VS Code Marketplace 的扩展详情内容来自扩展包中的 `README.md`。当
 ```bash
 pnpm -r --filter './extensions/*' run typecheck
 pnpm -r --filter './extensions/*' run compile
-pnpm --dir extensions/port-bridge-local exec vsce package --allow-missing-repository --out ../../artifacts/vsix/port-bridge-local-check.vsix
-pnpm --dir extensions/port-bridge-remote exec vsce package --allow-missing-repository --out ../../artifacts/vsix/port-bridge-remote-check.vsix
-unzip -p artifacts/vsix/port-bridge-local-check.vsix extension.vsixmanifest
-unzip -p artifacts/vsix/port-bridge-remote-check.vsix extension.vsixmanifest
+pnpm --dir extensions/portrelay-local exec vsce package --allow-missing-repository --out ../../artifacts/vsix/portrelay-local-check.vsix
+pnpm --dir extensions/portrelay-remote exec vsce package --allow-missing-repository --out ../../artifacts/vsix/portrelay-remote-check.vsix
+unzip -p artifacts/vsix/portrelay-local-check.vsix extension.vsixmanifest
+unzip -p artifacts/vsix/portrelay-remote-check.vsix extension.vsixmanifest
 ```
 
 检查完成后删除临时 `*-check.vsix` 文件。

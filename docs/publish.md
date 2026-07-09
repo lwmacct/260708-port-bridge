@@ -1,6 +1,6 @@
 # 发布
 
-本文档记录 Port Bridge 扩展发布到 GitHub Release 和 Visual Studio Marketplace 的流程。
+本文档记录 PortRelay 扩展发布到 GitHub Release 和 Visual Studio Marketplace 的流程。
 
 ## 相关链接
 
@@ -44,6 +44,6 @@ pnpm run package
 输出：
 
 ```text
-artifacts/vsix/port-bridge-local-<version>.vsix
-artifacts/vsix/port-bridge-remote-<version>.vsix
+artifacts/vsix/portrelay-local-<version>.vsix
+artifacts/vsix/portrelay-remote-<version>.vsix
 ```

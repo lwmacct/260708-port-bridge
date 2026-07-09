@@ -1,25 +1,25 @@
-# Port Bridge Remote
+# PortRelay Remote
 
 [Chinese documentation](README.md)
 
-[![CI](https://img.shields.io/github/actions/workflow/status/lwmacct/260708-port-bridge/ci.yml?branch=main&label=ci)](https://github.com/lwmacct/260708-port-bridge/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/lwmacct/260708-port-bridge?label=release)](https://github.com/lwmacct/260708-port-bridge/releases)
-[![License](https://img.shields.io/github/license/lwmacct/260708-port-bridge)](https://github.com/lwmacct/260708-port-bridge/blob/main/LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/lwmacct/260708-portrelay/ci.yml?branch=main&label=ci)](https://github.com/lwmacct/260708-portrelay/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/lwmacct/260708-portrelay?label=release)](https://github.com/lwmacct/260708-portrelay/releases)
+[![License](https://img.shields.io/github/license/lwmacct/260708-portrelay)](https://github.com/lwmacct/260708-portrelay/blob/main/LICENSE)
 
-Port Bridge Remote is the remote-workspace half of Port Bridge. It runs in the VS Code workspace extension host and creates remote TCP listeners and Unix sockets that forward to ports on your local machine.
+PortRelay Remote is the remote-workspace half of PortRelay. It runs in the VS Code workspace extension host and creates remote TCP listeners and Unix sockets that forward to endpoints on your local machine.
 
-Install this extension together with `lwmacct.port-bridge-local`. The remote extension owns configuration, starts the bridge, creates the internal control tunnel, and asks the local extension to connect back to local targets.
+Install this extension together with `lwmacct.portrelay-local`. The remote extension owns configuration, starts the relay, creates the internal control tunnel, and asks the local extension to connect back to local targets.
 
 ## What It Does
 
-Port Bridge exposes a local-only port inside a VS Code remote workspace:
+PortRelay exposes a local-only endpoint inside a VS Code remote workspace:
 
 ```text
 remote process
   -> remote <remote-endpoint>
-  -> Port Bridge Remote
+  -> PortRelay Remote
   -> VS Code forwarded control tunnel
-  -> Port Bridge Local
+  -> PortRelay Local
   -> local machine <local-endpoint>
 ```
 
@@ -29,18 +29,18 @@ Typical use cases:
 - Let remote tools call a local development service without making that service public.
 - Create a stable Unix socket path in the remote filesystem for tools that support sockets.
 
-HTTP, WebSocket, CDP, and other protocols are forwarded as raw TCP bytes. Port Bridge does not parse or terminate the protocol.
+HTTP, WebSocket, CDP, and other protocols are forwarded as raw TCP bytes. PortRelay does not parse or terminate the protocol.
 
 ## Required Companion Extension
 
-Port Bridge is split into two extensions because VS Code has separate local and remote extension hosts:
+PortRelay is split into two extensions because VS Code has separate local and remote extension hosts:
 
 ```text
-lwmacct.port-bridge-local
+lwmacct.portrelay-local
   runs locally in the UI extension host
   connects to local <local-endpoint>
 
-lwmacct.port-bridge-remote
+lwmacct.portrelay-remote
   runs in the remote workspace extension host
   creates remote sockets and remote TCP listeners
 ```
@@ -53,8 +53,8 @@ Minimal remote workspace setting:
 
 ```json
 {
-  "portBridge.autoStart": true,
-  "portBridge.mappings": [
+  "portrelay.autoStart": true,
+  "portrelay.mappings": [
     {
       "local": "127.0.0.1:9222",
       "remote": "127.0.0.1:9222"
@@ -73,14 +73,14 @@ Named mapping:
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": true,
       "local": "127.0.0.1:9222",
       "remote": [
         "127.0.0.1:9222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -91,7 +91,7 @@ Advanced mapping:
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": true,
@@ -101,7 +101,7 @@ Advanced mapping:
       ],
       "remote": [
         "127.0.0.1:39222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -125,21 +125,21 @@ Start Chrome on the local machine:
 google-chrome \
   --remote-debugging-address=127.0.0.1 \
   --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/port-bridge-chrome-profile
+  --user-data-dir=/tmp/portrelay-chrome-profile
 ```
 
 Configure the remote workspace:
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": true,
       "local": "127.0.0.1:9222",
       "remote": [
         "127.0.0.1:9222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -150,7 +150,7 @@ Verify from the remote workspace:
 
 ```bash
 curl http://127.0.0.1:9222/json/version
-curl --unix-socket /tmp/vscode-port-bridge/chrome-cdp.sock http://localhost/json/version
+curl --unix-socket /tmp/portrelay/chrome-cdp.sock http://localhost/json/version
 ```
 
 Use Playwright from the remote workspace:
@@ -177,18 +177,18 @@ main().catch((error) => {
 This extension contributes:
 
 ```text
-Port Bridge: Start Remote
-Port Bridge: Stop Remote
-Port Bridge: Restart Remote
-Port Bridge: Reconnect Control Channel
-Port Bridge: Show Remote Status
+PortRelay: Start Remote
+PortRelay: Stop Remote
+PortRelay: Restart Remote
+PortRelay: Reconnect Control Channel
+PortRelay: Show Remote Status
 ```
 
-If `portBridge.autoStart` is `true`, mappings start automatically after the remote window starts.
+If `portrelay.autoStart` is `true`, mappings start automatically after the remote window starts.
 
 ## Security Notes
 
-Port Bridge moves local capabilities into a remote workspace. Treat forwarded endpoints as sensitive, especially Chrome CDP and other debugging ports.
+PortRelay moves local capabilities into a remote workspace. Treat forwarded endpoints as sensitive, especially Chrome CDP and other debugging ports.
 
 Recommended defaults:
 
@@ -199,6 +199,6 @@ Recommended defaults:
 
 ## Links
 
-- Repository: https://github.com/lwmacct/260708-port-bridge
-- Issues: https://github.com/lwmacct/260708-port-bridge/issues
-- Publishing notes: https://github.com/lwmacct/260708-port-bridge/blob/main/docs/publish.md
+- Repository: https://github.com/lwmacct/260708-portrelay
+- Issues: https://github.com/lwmacct/260708-portrelay/issues
+- Publishing notes: https://github.com/lwmacct/260708-portrelay/blob/main/docs/publish.md

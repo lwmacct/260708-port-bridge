@@ -1,0 +1,4 @@
+{
+  "extension.description": "Local-side endpoint for PortRelay.",
+  "commands.showLocalStatus.title": "PortRelay: Show Local Status"
+}

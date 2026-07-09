@@ -1,8 +1,8 @@
-# Port Bridge
+# PortRelay
 
 [英文文档](README.en.md)
 
-Port Bridge 把本机 `127.0.0.1:<port>` 暴露到 VS Code 远程工作区里，适用于 Dev Containers、Remote SSH 等场景。
+PortRelay 把本机 `127.0.0.1:<port>` 暴露到 VS Code 远程工作区里，适用于 Dev Containers、Remote SSH 等场景。
 
 它解决的是 VS Code 常规端口转发的反方向：
 
@@ -16,20 +16,20 @@ Port Bridge 把本机 `127.0.0.1:<port>` 暴露到 VS Code 远程工作区里，
 
 ## 安装
 
-Port Bridge 由两个 companion extensions 组成，必须同时安装：
+PortRelay 由两个 companion extensions 组成，必须同时安装：
 
-- [Port Bridge Local](https://marketplace.visualstudio.com/items?itemName=lwmacct.port-bridge-local) (`lwmacct.port-bridge-local`)
-- [Port Bridge Remote](https://marketplace.visualstudio.com/items?itemName=lwmacct.port-bridge-remote) (`lwmacct.port-bridge-remote`)
+- [PortRelay Local](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-local) (`lwmacct.portrelay-local`)
+- [PortRelay Remote](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-remote) (`lwmacct.portrelay-remote`)
 
 两个扩展运行在不同 extension host：
 
 ```text
-Port Bridge Local
+PortRelay Local
   extensionKind: ["ui"]
   运行在本机 VS Code UI 侧
   负责连接本机 <local-endpoint>
 
-Port Bridge Remote
+PortRelay Remote
   extensionKind: ["workspace"]
   运行在远程 workspace/container/SSH 侧
   负责创建远程 TCP listener 和 Unix socket
@@ -39,17 +39,17 @@ Port Bridge Remote
 
 ## 快速开始
 
-在 VS Code 远程窗口的 `settings.json` 中配置要暴露的本机端口：
+在 VS Code 远程窗口的 `settings.json` 中配置要暴露的本机端点：
 
 ```json
 {
-  "portBridge.autoStart": true,
-  "portBridge.mappings": [
+  "portrelay.autoStart": true,
+  "portrelay.mappings": [
     {
       "local": "127.0.0.1:9222",
       "remote": [
         "127.0.0.1:9222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -60,7 +60,7 @@ Port Bridge Remote
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/chrome-cdp.sock
+/tmp/portrelay/chrome-cdp.sock
 ```
 
 如果本机 `9222` 是 Chrome CDP 端口，可以在远程终端里验证：
@@ -72,7 +72,7 @@ curl http://127.0.0.1:9222/json/version
 或通过 Unix socket 验证：
 
 ```bash
-curl --unix-socket /tmp/vscode-port-bridge/chrome-cdp.sock \
+curl --unix-socket /tmp/portrelay/chrome-cdp.sock \
   http://localhost/json/version
 ```
 
@@ -84,7 +84,7 @@ curl --unix-socket /tmp/vscode-port-bridge/chrome-cdp.sock \
 google-chrome \
   --remote-debugging-address=127.0.0.1 \
   --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/port-bridge-chrome-profile
+  --user-data-dir=/tmp/portrelay-chrome-profile
 ```
 
 macOS 可以使用：
@@ -93,21 +93,21 @@ macOS 可以使用：
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
   --remote-debugging-address=127.0.0.1 \
   --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/port-bridge-chrome-profile
+  --user-data-dir=/tmp/portrelay-chrome-profile
 ```
 
 远程工作区配置：
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": true,
       "local": "127.0.0.1:9222",
       "remote": [
         "127.0.0.1:9222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -118,7 +118,7 @@ macOS 可以使用：
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/chrome-cdp.sock
+/tmp/portrelay/chrome-cdp.sock
 ```
 
 远程工作区里的 Playwright 可以直接连接远程地址：
@@ -151,17 +151,17 @@ command = "npx"
 args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 ```
 
-这里的 MCP server 运行在远程工作区侧，`127.0.0.1:9222` 会通过 Port Bridge 转发到本机浏览器。
+这里的 MCP server 运行在远程工作区侧，`127.0.0.1:9222` 会通过 PortRelay 转发到本机浏览器。
 
 ## 配置参考
 
-### `portBridge.autoStart`
+### `portrelay.autoStart`
 
 默认值：`true`
 
 远程窗口启动后自动启动已配置的映射。关闭后可以通过命令手动启动。
 
-### `portBridge.mappings`
+### `portrelay.mappings`
 
 默认值：`[]`
 
@@ -169,7 +169,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": false,
@@ -196,7 +196,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
   ],
   "remote": [
     "127.0.0.1:9222",
-    "unix:/tmp/vscode-port-bridge/browser.sock"
+    "unix:/tmp/portrelay/browser.sock"
   ]
 }
 ```
@@ -214,7 +214,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": true,
@@ -224,7 +224,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
       ],
       "remote": [
         "127.0.0.1:39222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -240,7 +240,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 
 Unix socket 只存在于对应机器的文件系统中，暴露面比 TCP 端口更小；远程 TCP 端口适合只支持 `host:port` 的工具。
 
-### `portBridge.controlReconnectDelayMs`
+### `portrelay.controlReconnectDelayMs`
 
 默认值：`1000`
 
@@ -251,17 +251,17 @@ Unix socket 只存在于对应机器的文件系统中，暴露面比 TCP 端口
 Remote 扩展提供：
 
 ```text
-Port Bridge: Start Remote
-Port Bridge: Stop Remote
-Port Bridge: Restart Remote
-Port Bridge: Reconnect Control Channel
-Port Bridge: Show Remote Status
+PortRelay: Start Remote
+PortRelay: Stop Remote
+PortRelay: Restart Remote
+PortRelay: Reconnect Control Channel
+PortRelay: Show Remote Status
 ```
 
 Local 扩展提供：
 
 ```text
-Port Bridge: Show Local Status
+PortRelay: Show Local Status
 ```
 
 ## 工作原理
@@ -271,19 +271,19 @@ Port Bridge: Show Local Status
 ```text
 远程进程
   -> 远程 <remote-endpoint>
-  -> port-bridge-remote
+  -> portrelay-remote
   -> VS Code forwarded control tunnel
-  -> port-bridge-local
+  -> portrelay-local
   -> 本机 <local-endpoint>
 ```
 
-`port-bridge-remote` 负责读取 `portBridge.mappings`、创建远程 TCP listener 和 Unix socket、启动内部 control server，并通过 `vscode.env.asExternalUri()` 创建 VS Code tunnel。
+`portrelay-remote` 负责读取 `portrelay.mappings`、创建远程 TCP listener 和 Unix socket、启动内部 control server，并通过 `vscode.env.asExternalUri()` 创建 VS Code tunnel。
 
-`port-bridge-local` 负责接收 remote 扩展传来的 forwarded URI，连接 control channel，并按 session 连接本机目标端口。
+`portrelay-local` 负责接收 remote 扩展传来的 forwarded URI，连接 control channel，并按 session 连接本机目标端点。
 
 HTTP、WebSocket、CDP 都不会被解析，只作为 raw TCP bytes 转发。
 
-VS Code 的 Ports/Forwarded Ports 面板中可能会出现一个随机内部 control port。它不是业务端口。如果用户关闭这个 tunnel，remote 扩展会按 `portBridge.controlReconnectDelayMs` 自动重建。
+VS Code 的 Ports/Forwarded Ports 面板中可能会出现一个随机内部 control port。它不是业务端口。如果用户关闭这个 tunnel，remote 扩展会按 `portrelay.controlReconnectDelayMs` 自动重建。
 
 更多开发过程中的踩坑记录见 [docs/notes.md](docs/notes.md)。
 
@@ -292,7 +292,7 @@ VS Code 的 Ports/Forwarded Ports 面板中可能会出现一个随机内部 con
 - 需要同时安装 Local 和 Remote 两个扩展。
 - 当前 control channel 假设 `vscode.env.asExternalUri()` 在桌面版 Remote/Dev Containers/Remote SSH 下返回本机可直接 TCP 连接的 URI。
 - Web 版 VS Code 或某些 cloud tunnel 环境可能返回 HTTPS 代理 URI，这类环境需要额外适配。
-- Port Bridge 会把本机端口能力暴露到远程环境。CDP 端口权限很高，建议优先绑定本机 `127.0.0.1`，远程侧也优先使用 Unix socket 或 `127.0.0.1`，不要绑定到 `0.0.0.0`。
+- PortRelay 会把本机端点能力暴露到远程环境。CDP 端口权限很高，建议优先绑定本机 `127.0.0.1`，远程侧也优先使用 Unix socket 或 `127.0.0.1`，不要绑定到 `0.0.0.0`。
 
 ## 开发
 
@@ -323,8 +323,8 @@ pnpm run package
 输出：
 
 ```text
-artifacts/vsix/port-bridge-local-<version>.vsix
-artifacts/vsix/port-bridge-remote-<version>.vsix
+artifacts/vsix/portrelay-local-<version>.vsix
+artifacts/vsix/portrelay-remote-<version>.vsix
 ```
 
 发布说明见 [docs/publish.md](docs/publish.md)。本地化和 README 语言规则见 [docs/localization.md](docs/localization.md)。

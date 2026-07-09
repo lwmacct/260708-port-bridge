@@ -1,6 +1,6 @@
 # 踩坑和尝试记录
 
-本文档记录 Port Bridge 开发过程中遇到的 VS Code Remote extension host、Proposed API 和 tunnel 生命周期相关问题。
+本文档记录 PortRelay 开发过程中遇到的 VS Code Remote extension host、Proposed API 和 tunnel 生命周期相关问题。
 
 ## remote 扩展不能依赖 local 扩展
 
@@ -46,12 +46,12 @@ code --enable-proposed-api=...
 127.0.0.1:37469
 ```
 
-这是内部 control server，不是业务端口。它用于连接 `port-bridge-remote` 和 `port-bridge-local`：
+这是内部 control server，不是业务端口。它用于连接 `portrelay-remote` 和 `portrelay-local`：
 
 ```text
-port-bridge-remote 127.0.0.1:<random-control-port>
+portrelay-remote 127.0.0.1:<random-control-port>
   -> VS Code forwarded port
-  -> port-bridge-local
+  -> portrelay-local
 ```
 
 这个端口是通过 `vscode.env.asExternalUri()` 创建的 VS Code tunnel，所以会出现在 VS Code Ports/Forwarded Ports 里。VS Code 官方 API 说明这类 tunnel 的生命周期由编辑器管理，用户可以关闭它。
@@ -59,14 +59,14 @@ port-bridge-remote 127.0.0.1:<random-control-port>
 如果用户误关这个随机 control port：
 
 - 已有连接会断开。
-- remote 扩展会在 `portBridge.controlReconnectDelayMs` 后自动重新创建 tunnel。
-- 也可以执行 `Port Bridge: Reconnect Control Channel` 手动重连。
+- remote 扩展会在 `portrelay.controlReconnectDelayMs` 后自动重新创建 tunnel。
+- 也可以执行 `PortRelay: Reconnect Control Channel` 手动重连。
 - remote 状态栏项点击后也会触发重连。
 
 默认重连延迟：
 
 ```json
 {
-  "portBridge.controlReconnectDelayMs": 1000
+  "portrelay.controlReconnectDelayMs": 1000
 }
 ```

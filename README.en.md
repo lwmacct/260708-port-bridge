@@ -1,8 +1,8 @@
-# Port Bridge
+# PortRelay
 
 [Chinese documentation](README.md)
 
-Port Bridge exposes local `127.0.0.1:<port>` endpoints inside VS Code remote workspaces, including Dev Containers and Remote SSH.
+PortRelay exposes local `127.0.0.1:<port>` endpoints inside VS Code remote workspaces, including Dev Containers and Remote SSH.
 
 It solves the reverse direction of regular VS Code port forwarding:
 
@@ -16,20 +16,20 @@ A typical use case is letting Playwright, Codex MCP, or other tools inside a rem
 
 ## Installation
 
-Port Bridge is made of two companion extensions. Install both:
+PortRelay is made of two companion extensions. Install both:
 
-- [Port Bridge Local](https://marketplace.visualstudio.com/items?itemName=lwmacct.port-bridge-local) (`lwmacct.port-bridge-local`)
-- [Port Bridge Remote](https://marketplace.visualstudio.com/items?itemName=lwmacct.port-bridge-remote) (`lwmacct.port-bridge-remote`)
+- [PortRelay Local](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-local) (`lwmacct.portrelay-local`)
+- [PortRelay Remote](https://marketplace.visualstudio.com/items?itemName=lwmacct.portrelay-remote) (`lwmacct.portrelay-remote`)
 
 The extensions run in different extension hosts:
 
 ```text
-Port Bridge Local
+PortRelay Local
   extensionKind: ["ui"]
   runs in the local VS Code UI side
   connects to local <local-endpoint>
 
-Port Bridge Remote
+PortRelay Remote
   extensionKind: ["workspace"]
   runs in the remote workspace/container/SSH side
   creates remote TCP listeners and Unix sockets
@@ -39,17 +39,17 @@ If either extension is manually installed in the wrong location, or `remote.exte
 
 ## Quick Start
 
-Configure the local port to expose in the VS Code remote window `settings.json`:
+Configure the local endpoint to expose in the VS Code remote window `settings.json`:
 
 ```json
 {
-  "portBridge.autoStart": true,
-  "portBridge.mappings": [
+  "portrelay.autoStart": true,
+  "portrelay.mappings": [
     {
       "local": "127.0.0.1:9222",
       "remote": [
         "127.0.0.1:9222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -60,7 +60,7 @@ This exposes local `127.0.0.1:9222` inside the remote workspace and creates:
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/chrome-cdp.sock
+/tmp/portrelay/chrome-cdp.sock
 ```
 
 If local `9222` is a Chrome CDP port, verify it from the remote terminal:
@@ -72,7 +72,7 @@ curl http://127.0.0.1:9222/json/version
 Or verify through the Unix socket:
 
 ```bash
-curl --unix-socket /tmp/vscode-port-bridge/chrome-cdp.sock \
+curl --unix-socket /tmp/portrelay/chrome-cdp.sock \
   http://localhost/json/version
 ```
 
@@ -84,7 +84,7 @@ Start Chrome or Chromium with a CDP port on the local machine:
 google-chrome \
   --remote-debugging-address=127.0.0.1 \
   --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/port-bridge-chrome-profile
+  --user-data-dir=/tmp/portrelay-chrome-profile
 ```
 
 On macOS:
@@ -93,21 +93,21 @@ On macOS:
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
   --remote-debugging-address=127.0.0.1 \
   --remote-debugging-port=9222 \
-  --user-data-dir=/tmp/port-bridge-chrome-profile
+  --user-data-dir=/tmp/portrelay-chrome-profile
 ```
 
 Configure the remote workspace:
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": true,
       "local": "127.0.0.1:9222",
       "remote": [
         "127.0.0.1:9222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -118,7 +118,7 @@ The remote side creates:
 
 ```text
 127.0.0.1:9222
-/tmp/vscode-port-bridge/chrome-cdp.sock
+/tmp/portrelay/chrome-cdp.sock
 ```
 
 Playwright in the remote workspace can connect directly to the remote address:
@@ -151,17 +151,17 @@ command = "npx"
 args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 ```
 
-The MCP server runs on the remote workspace side, so `127.0.0.1:9222` is forwarded to the local browser through Port Bridge.
+The MCP server runs on the remote workspace side, so `127.0.0.1:9222` is forwarded to the local browser through PortRelay.
 
 ## Configuration
 
-### `portBridge.autoStart`
+### `portrelay.autoStart`
 
 Default: `true`
 
 Starts configured mappings automatically after the remote window starts. Disable it if you prefer starting manually from a command.
 
-### `portBridge.mappings`
+### `portrelay.mappings`
 
 Default: `[]`
 
@@ -169,7 +169,7 @@ Configures local-to-remote endpoint mappings. Each mapping is an object, so you 
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": false,
@@ -196,7 +196,7 @@ Both `local` and `remote` accept a string or an array of strings:
   ],
   "remote": [
     "127.0.0.1:9222",
-    "unix:/tmp/vscode-port-bridge/browser.sock"
+    "unix:/tmp/portrelay/browser.sock"
   ]
 }
 ```
@@ -214,7 +214,7 @@ Advanced mappings can combine local socket fallback with multiple remote entrypo
 
 ```json
 {
-  "portBridge.mappings": [
+  "portrelay.mappings": [
     {
       "name": "chrome-cdp",
       "enabled": true,
@@ -224,7 +224,7 @@ Advanced mappings can combine local socket fallback with multiple remote entrypo
       ],
       "remote": [
         "127.0.0.1:39222",
-        "unix:/tmp/vscode-port-bridge/chrome-cdp.sock"
+        "unix:/tmp/portrelay/chrome-cdp.sock"
       ]
     }
   ]
@@ -240,7 +240,7 @@ Fields:
 
 Unix sockets exist only in the corresponding machine's filesystem and have a smaller exposure surface than TCP ports; remote TCP ports are useful for tools that only support `host:port`.
 
-### `portBridge.controlReconnectDelayMs`
+### `portrelay.controlReconnectDelayMs`
 
 Default: `1000`
 
@@ -251,17 +251,17 @@ Delay, in milliseconds, before the remote extension recreates the internal contr
 The Remote extension contributes:
 
 ```text
-Port Bridge: Start Remote
-Port Bridge: Stop Remote
-Port Bridge: Restart Remote
-Port Bridge: Reconnect Control Channel
-Port Bridge: Show Remote Status
+PortRelay: Start Remote
+PortRelay: Stop Remote
+PortRelay: Restart Remote
+PortRelay: Reconnect Control Channel
+PortRelay: Show Remote Status
 ```
 
 The Local extension contributes:
 
 ```text
-Port Bridge: Show Local Status
+PortRelay: Show Local Status
 ```
 
 ## How It Works
@@ -271,19 +271,19 @@ Data path:
 ```text
 remote process
   -> remote <remote-endpoint>
-  -> port-bridge-remote
+  -> portrelay-remote
   -> VS Code forwarded control tunnel
-  -> port-bridge-local
+  -> portrelay-local
   -> local machine <local-endpoint>
 ```
 
-`port-bridge-remote` reads `portBridge.mappings`, creates remote TCP listeners and Unix sockets, starts an internal control server, and creates a VS Code tunnel through `vscode.env.asExternalUri()`.
+`portrelay-remote` reads `portrelay.mappings`, creates remote TCP listeners and Unix sockets, starts an internal control server, and creates a VS Code tunnel through `vscode.env.asExternalUri()`.
 
-`port-bridge-local` receives the forwarded URI from the remote extension, connects to the control channel, and opens local target connections per session.
+`portrelay-local` receives the forwarded URI from the remote extension, connects to the control channel, and opens local target connections per session.
 
 HTTP, WebSocket, and CDP traffic are not parsed. They are forwarded as raw TCP bytes.
 
-VS Code's Ports/Forwarded Ports panel may show a random internal control port. It is not a business port. If the user closes that tunnel, the remote extension recreates it after `portBridge.controlReconnectDelayMs`.
+VS Code's Ports/Forwarded Ports panel may show a random internal control port. It is not a business port. If the user closes that tunnel, the remote extension recreates it after `portrelay.controlReconnectDelayMs`.
 
 More development notes are in [docs/notes.md](docs/notes.md).
 
@@ -292,7 +292,7 @@ More development notes are in [docs/notes.md](docs/notes.md).
 - Both Local and Remote extensions must be installed.
 - The current control channel assumes `vscode.env.asExternalUri()` returns a locally reachable TCP URI in desktop Remote/Dev Containers/Remote SSH.
 - VS Code for the Web or some cloud tunnel environments may return an HTTPS proxy URI; those environments need additional handling.
-- Port Bridge exposes local port capabilities to the remote environment. CDP ports are powerful, so prefer binding the local side to `127.0.0.1`, and prefer remote Unix sockets or remote `127.0.0.1`. Do not bind privileged debug protocols to `0.0.0.0`.
+- PortRelay exposes local endpoint capabilities to the remote environment. CDP ports are powerful, so prefer binding the local side to `127.0.0.1`, and prefer remote Unix sockets or remote `127.0.0.1`. Do not bind privileged debug protocols to `0.0.0.0`.
 
 ## Development
 
@@ -323,8 +323,8 @@ pnpm run package
 Output:
 
 ```text
-artifacts/vsix/port-bridge-local-<version>.vsix
-artifacts/vsix/port-bridge-remote-<version>.vsix
+artifacts/vsix/portrelay-local-<version>.vsix
+artifacts/vsix/portrelay-remote-<version>.vsix
 ```
 
 Publishing notes are in [docs/publish.md](docs/publish.md). Localization and README language rules are in [docs/localization.md](docs/localization.md).
