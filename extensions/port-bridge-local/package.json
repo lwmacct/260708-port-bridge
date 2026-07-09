@@ -2,13 +2,43 @@
   "name": "port-bridge-local",
   "displayName": "Port Bridge Local",
   "description": "Local-side endpoint for Port Bridge.",
-  "version": "0.10.260709",
+  "version": "0.11.260709",
   "publisher": "lwmacct",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/lwmacct/260708-port-bridge"
   },
+  "homepage": "https://github.com/lwmacct/260708-port-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/lwmacct/260708-port-bridge/issues"
+  },
+  "qna": "https://github.com/lwmacct/260708-port-bridge/issues",
+  "icon": "icon.png",
+  "galleryBanner": {
+    "color": "#111827",
+    "theme": "dark"
+  },
+  "badges": [
+    {
+      "url": "https://img.shields.io/github/actions/workflow/status/lwmacct/260708-port-bridge/ci.yml?branch=main&label=ci",
+      "href": "https://github.com/lwmacct/260708-port-bridge/actions/workflows/ci.yml",
+      "description": "CI status"
+    },
+    {
+      "url": "https://img.shields.io/github/license/lwmacct/260708-port-bridge",
+      "href": "https://github.com/lwmacct/260708-port-bridge/blob/main/LICENSE",
+      "description": "License"
+    }
+  ],
+  "preview": false,
+  "pricing": "Free",
+  "keywords": [
+    "port-forwarding",
+    "remote-development",
+    "tunnel",
+    "vscode-remote"
+  ],
   "engines": {
     "vscode": "^1.128.0",
     "npm": "please-use-pnpm"
