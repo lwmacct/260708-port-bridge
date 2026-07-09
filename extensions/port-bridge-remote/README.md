@@ -55,7 +55,11 @@ lwmacct.port-bridge-remote
 ```json
 {
   "portBridge.autoStart": true,
-  "portBridge.mappings": [9222]
+  "portBridge.mappings": [
+    {
+      "port": 9222
+    }
+  ]
 }
 ```
 
@@ -73,6 +77,7 @@ lwmacct.port-bridge-remote
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "port": 9222
     }
   ]
@@ -86,6 +91,7 @@ lwmacct.port-bridge-remote
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "localHost": "127.0.0.1",
       "localPort": 9222,
       "remoteHost": "127.0.0.1",
@@ -98,7 +104,7 @@ lwmacct.port-bridge-remote
 
 字段说明：
 
-- `number`: 常见场景的简写，例如 `9222`。
+- `enabled`: 是否启用此映射，默认 `true`。设为 `false` 时会跳过但保留配置。
 - `name`: 稳定的映射名称，默认 `port-<localPort>`。
 - `port`: 同时用于 `localPort` 和默认 `remotePort` 的简写端口。
 - `localHost`: 本机目标主机，默认 `127.0.0.1`。
@@ -125,6 +131,7 @@ google-chrome \
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "port": 9222
     }
   ]

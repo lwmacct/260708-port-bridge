@@ -343,6 +343,10 @@ class RemoteBridge {
     const mappings: Mapping[] = [];
 
     for (const raw of rawMappings) {
+      if (this.isDisabledMapping(raw)) {
+        continue;
+      }
+
       const mapping = this.normalizeMapping(raw);
       if (!mapping) {
         this.log(`Skipping invalid mapping: ${JSON.stringify(raw)}`);
@@ -356,23 +360,15 @@ class RemoteBridge {
   }
 
   private normalizeMapping(raw: unknown): Mapping | undefined {
-    if (this.isPort(raw)) {
-      const name = `port-${raw}`;
-      return {
-        name,
-        localHost: DEFAULT_HOST,
-        localPort: raw,
-        remoteSocket: this.defaultSocketPath(name),
-        remoteHost: DEFAULT_HOST,
-        remotePort: raw
-      };
-    }
-
     if (!raw || typeof raw !== 'object') {
       return undefined;
     }
 
     const item = raw as Record<string, unknown>;
+    if (item.enabled !== undefined && typeof item.enabled !== 'boolean') {
+      return undefined;
+    }
+
     const port = this.isPort(item.port) ? item.port : undefined;
     const localPort = this.isPort(item.localPort) ? item.localPort : port;
     if (!localPort) {
@@ -401,6 +397,23 @@ class RemoteBridge {
       remoteHost,
       remotePort
     };
+  }
+
+  private isDisabledMapping(raw: unknown): boolean {
+    if (!raw || typeof raw !== 'object') {
+      return false;
+    }
+
+    const item = raw as Record<string, unknown>;
+    if (item.enabled !== false) {
+      return false;
+    }
+
+    const name = typeof item.name === 'string' && item.name.trim()
+      ? item.name.trim()
+      : JSON.stringify(raw);
+    this.log(`Skipping disabled mapping: ${name}`);
+    return true;
   }
 
   private isPort(value: unknown): value is number {

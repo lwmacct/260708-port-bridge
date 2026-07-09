@@ -55,7 +55,11 @@ Minimal remote workspace setting:
 ```json
 {
   "portBridge.autoStart": true,
-  "portBridge.mappings": [9222]
+  "portBridge.mappings": [
+    {
+      "port": 9222
+    }
+  ]
 }
 ```
 
@@ -73,6 +77,7 @@ Named mapping:
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "port": 9222
     }
   ]
@@ -86,6 +91,7 @@ Advanced mapping:
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "localHost": "127.0.0.1",
       "localPort": 9222,
       "remoteHost": "127.0.0.1",
@@ -98,7 +104,7 @@ Advanced mapping:
 
 Mapping fields:
 
-- `number`: shorthand for the common case, for example `9222`.
+- `enabled`: whether this mapping is active; defaults to `true`. Set it to `false` to keep but skip the mapping.
 - `name`: stable mapping name; defaults to `port-<localPort>`.
 - `port`: shared shorthand for `localPort` and default `remotePort`.
 - `localHost`: local target host; defaults to `127.0.0.1`.
@@ -125,6 +131,7 @@ Configure the remote workspace:
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "port": 9222
     }
   ]

@@ -44,7 +44,11 @@ Configure the local port to expose in the VS Code remote window `settings.json`:
 ```json
 {
   "portBridge.autoStart": true,
-  "portBridge.mappings": [9222]
+  "portBridge.mappings": [
+    {
+      "port": 9222
+    }
+  ]
 }
 ```
 
@@ -95,6 +99,7 @@ Configure the remote workspace:
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "port": 9222
     }
   ]
@@ -152,18 +157,29 @@ Starts configured mappings automatically after the remote window starts. Disable
 
 Default: `[]`
 
-Configures local-to-remote port mappings. The simplest form is a port number:
+Configures local-to-remote port mappings. Each mapping is an object, so you can temporarily disable a mapping with `enabled` without deleting it:
 
 ```json
 {
-  "portBridge.mappings": [9222, 3000]
+  "portBridge.mappings": [
+    {
+      "name": "chrome-cdp",
+      "enabled": false,
+      "port": 9222
+    },
+    {
+      "name": "web-dev",
+      "port": 3000
+    }
+  ]
 }
 ```
 
-The port shorthand is equivalent to:
+The minimal mapping object is equivalent to:
 
 ```json
 {
+  "enabled": true,
   "name": "port-9222",
   "localHost": "127.0.0.1",
   "localPort": 9222,
@@ -180,6 +196,7 @@ Object mappings can override the name, host, ports, and socket path:
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "localHost": "127.0.0.1",
       "localPort": 9222,
       "remoteHost": "127.0.0.1",
@@ -192,7 +209,7 @@ Object mappings can override the name, host, ports, and socket path:
 
 Fields:
 
-- `number`: port shorthand, for example `9222`.
+- `enabled`: whether this mapping is active; defaults to `true`. Set it to `false` to keep but skip the mapping.
 - `name`: mapping name; defaults to `port-<localPort>`.
 - `port`: shorthand used for `localPort` and the default `remotePort`.
 - `localHost`: local target host; defaults to `127.0.0.1`.

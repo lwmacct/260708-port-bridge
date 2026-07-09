@@ -89,67 +89,63 @@
           "default": [],
           "description": "%configuration.mappings.description%",
           "items": {
+            "type": "object",
             "anyOf": [
               {
+                "required": [
+                  "port"
+                ]
+              },
+              {
+                "required": [
+                  "localPort"
+                ]
+              }
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "default": true,
+                "description": "%configuration.mapping.enabled.description%"
+              },
+              "name": {
+                "type": "string",
+                "description": "%configuration.mapping.name.description%"
+              },
+              "port": {
                 "type": "number",
                 "minimum": 1,
                 "maximum": 65535,
-                "description": "%configuration.mapping.number.description%"
+                "description": "%configuration.mapping.port.description%"
               },
-              {
-                "type": "object",
-                "anyOf": [
-                  {
-                    "required": [
-                      "port"
-                    ]
-                  },
-                  {
-                    "required": [
-                      "localPort"
-                    ]
-                  }
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "%configuration.mapping.name.description%"
-                  },
-                  "port": {
-                    "type": "number",
-                    "minimum": 1,
-                    "maximum": 65535,
-                    "description": "%configuration.mapping.port.description%"
-                  },
-                  "localHost": {
-                    "type": "string",
-                    "default": "127.0.0.1",
-                    "description": "%configuration.mapping.localHost.description%"
-                  },
-                  "localPort": {
-                    "type": "number",
-                    "minimum": 1,
-                    "maximum": 65535,
-                    "description": "%configuration.mapping.localPort.description%"
-                  },
-                  "remoteSocket": {
-                    "type": "string",
-                    "description": "%configuration.mapping.remoteSocket.description%"
-                  },
-                  "remoteHost": {
-                    "type": "string",
-                    "default": "127.0.0.1",
-                    "description": "%configuration.mapping.remoteHost.description%"
-                  },
-                  "remotePort": {
-                    "type": "number",
-                    "minimum": 1,
-                    "maximum": 65535,
-                    "description": "%configuration.mapping.remotePort.description%"
-                  }
-                }
+              "localHost": {
+                "type": "string",
+                "default": "127.0.0.1",
+                "description": "%configuration.mapping.localHost.description%"
+              },
+              "localPort": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 65535,
+                "description": "%configuration.mapping.localPort.description%"
+              },
+              "remoteSocket": {
+                "type": "string",
+                "description": "%configuration.mapping.remoteSocket.description%"
+              },
+              "remoteHost": {
+                "type": "string",
+                "default": "127.0.0.1",
+                "description": "%configuration.mapping.remoteHost.description%"
+              },
+              "remotePort": {
+                "type": "number",
+                "minimum": 1,
+                "maximum": 65535,
+                "description": "%configuration.mapping.remotePort.description%"
               }
-            ]
+            }
           }
         },
         "portBridge.controlReconnectDelayMs": {

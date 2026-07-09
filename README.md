@@ -44,7 +44,11 @@ Port Bridge Remote
 ```json
 {
   "portBridge.autoStart": true,
-  "portBridge.mappings": [9222]
+  "portBridge.mappings": [
+    {
+      "port": 9222
+    }
+  ]
 }
 ```
 
@@ -95,6 +99,7 @@ macOS 可以使用：
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "port": 9222
     }
   ]
@@ -152,18 +157,29 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 
 默认值：`[]`
 
-配置本机到远程的端口映射。最简单的写法是端口号：
+配置本机到远程的端口映射。每个映射都是对象，因此可以保留配置并通过 `enabled` 临时禁用：
 
 ```json
 {
-  "portBridge.mappings": [9222, 3000]
+  "portBridge.mappings": [
+    {
+      "name": "chrome-cdp",
+      "enabled": false,
+      "port": 9222
+    },
+    {
+      "name": "web-dev",
+      "port": 3000
+    }
+  ]
 }
 ```
 
-端口号简写等价于：
+最小映射对象等价于：
 
 ```json
 {
+  "enabled": true,
   "name": "port-9222",
   "localHost": "127.0.0.1",
   "localPort": 9222,
@@ -180,6 +196,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "localHost": "127.0.0.1",
       "localPort": 9222,
       "remoteHost": "127.0.0.1",
@@ -192,7 +209,7 @@ args = ["-y", "@playwright/mcp@latest", "--cdp-endpoint=http://127.0.0.1:9222"]
 
 字段说明：
 
-- `number`: 端口号简写，例如 `9222`。
+- `enabled`: 是否启用此映射，默认 `true`。设为 `false` 时会跳过但保留配置。
 - `name`: 映射名称，默认 `port-<localPort>`。
 - `port`: 同时作为 `localPort` 和默认 `remotePort`。
 - `localHost`: 本机侧要连接的 host，默认 `127.0.0.1`。

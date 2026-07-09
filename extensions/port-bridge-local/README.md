@@ -54,7 +54,11 @@ lwmacct.port-bridge-remote
 ```json
 {
   "portBridge.autoStart": true,
-  "portBridge.mappings": [9222]
+  "portBridge.mappings": [
+    {
+      "port": 9222
+    }
+  ]
 }
 ```
 
@@ -72,6 +76,7 @@ lwmacct.port-bridge-remote
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "port": 9222
     }
   ]
@@ -85,6 +90,7 @@ lwmacct.port-bridge-remote
   "portBridge.mappings": [
     {
       "name": "chrome-cdp",
+      "enabled": true,
       "localHost": "127.0.0.1",
       "localPort": 9222,
       "remoteHost": "127.0.0.1",
