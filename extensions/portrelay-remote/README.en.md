@@ -1,6 +1,6 @@
 # Port Relay Remote
 
-[Chinese documentation](README.md)
+[中文文档](README.md)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/lwmacct/260708-portrelay/ci.yml?branch=main&label=ci)](https://github.com/lwmacct/260708-portrelay/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/lwmacct/260708-portrelay?label=release)](https://github.com/lwmacct/260708-portrelay/releases)

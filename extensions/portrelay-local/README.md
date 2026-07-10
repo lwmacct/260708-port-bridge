@@ -1,6 +1,6 @@
 # Port Relay Local
 
-[英文文档](https://github.com/lwmacct/260708-portrelay/blob/main/extensions/portrelay-local/README.en.md)
+[English documentation](https://github.com/lwmacct/260708-portrelay/blob/main/extensions/portrelay-local/README.en.md)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/lwmacct/260708-portrelay/ci.yml?branch=main&label=ci)](https://github.com/lwmacct/260708-portrelay/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/lwmacct/260708-portrelay?label=release)](https://github.com/lwmacct/260708-portrelay/releases)

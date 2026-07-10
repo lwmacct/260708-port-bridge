@@ -1,6 +1,6 @@
 # Port Relay
 
-[Chinese documentation](README.md)
+[中文文档](README.md)
 
 Port Relay exposes local `127.0.0.1:<port>` endpoints inside VS Code remote workspaces, including Dev Containers and Remote SSH.
 

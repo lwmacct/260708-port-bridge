@@ -64,8 +64,8 @@ VS Code Marketplace 的扩展详情内容来自扩展包中的 `README.md`。当
 
 - `README.md` 始终是中文。
 - `README.en.md` 是英文副语言版本。
-- 中文 README 顶部链接英文文档。
-- 英文 README 顶部链接中文文档。
+- 中文 README 顶部使用 `English documentation` 链接英文文档，保证只读英文的用户能在默认中文入口中找到英文版本。
+- 英文 README 顶部使用 `中文文档` 链接中文文档，保证中文用户能直接识别中文版本入口。
 
 这保证 GitHub、Marketplace、VSIX 本地安装场景都有稳定的默认中文入口，同时英文用户可以通过显式链接进入英文说明。
 

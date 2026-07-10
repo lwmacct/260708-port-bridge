@@ -1,6 +1,6 @@
 # Port Relay
 
-[英文文档](README.en.md)
+[English documentation](README.en.md)
 
 Port Relay 把本机 `127.0.0.1:<port>` 暴露到 VS Code 远程工作区里，适用于 Dev Containers、Remote SSH 等场景。
 
